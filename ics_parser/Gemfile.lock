@@ -1,0 +1,18 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    icalendar (2.5.3)
+      ice_cube (~> 0.16)
+    ice_cube (0.16.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  icalendar
+
+RUBY VERSION
+   ruby 2.3.1p112
+
+BUNDLED WITH
+   1.16.6
