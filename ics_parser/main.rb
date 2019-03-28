@@ -4,10 +4,10 @@ require './server.rb'
 port = 2000
 
 server = Server.new(port)
-puts "INICIOU"
+puts "ICS PARSER STARTED"
 
 server.listen do |client|
-    puts "COISA"
+    puts "ICS PARSER LISTENING"
     file_name = client.gets.chomp
     if File.exist? file_name
         client.puts "FILE EXISTS"
@@ -27,5 +27,4 @@ server.listen do |client|
     else
         client.puts "ERROR: Invalid filename"
     end
-    puts "FILE NAME == #{file_name}"
 end
