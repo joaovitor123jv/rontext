@@ -5,16 +5,16 @@ import os
 def listen(path):
     i = inotify.adapters.InotifyTree(path)
 
-    # i.add_watch()
+    # i.add_watch(path)
 
     # with open('/tmp/test_file', 'w'):
     #     pass
     
-    for event in i.event_gen(yield_nones = False):
+    # for event in i.event_gen(yield_nones = False):
+    for event in i.event_gen():
         (_, type_names, path, filename) = event
 
         if(filename.startswith(".")):
-            # print("IGNORING FILE: ", filename)
             pass
         else:
             print("PATH=[{}] FILENAME=[{}] EVENT_TYPES=[{}]".format(path, filename, type_names))
