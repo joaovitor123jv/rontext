@@ -77,6 +77,6 @@ else
         puts events.to_yaml
 
     else
-        puts (ERROR: "File doesn't exists").to_yaml
+        puts ({ERROR: "File doesn't exists"}).to_yaml
     end
 end

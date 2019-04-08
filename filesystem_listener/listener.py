@@ -4,17 +4,10 @@ import settings
 
 def listenPath(path):
     i = inotify.adapters.InotifyTree(path)
-    # i = inotify.adapters.Inotify()
-
-    # i.add_watch(path)
-    
-    # for event in i.event_gen(yield_nones = False):
     for event in i.event_gen():
         (_, type_names, path, filename) = event
 
-        if(filename.startswith(".")):
-            pass
-        else:
+        if not filename.startswith("."):
             print("PATH=[{}] FILENAME=[{}] EVENT_TYPES=[{}]".format(path, filename, type_names))
 
 def listen():
@@ -34,8 +27,7 @@ def listenOnlyVisible(listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
 
-        # print(f"PATH=[{path}] FILENAME=[{filename}] EVENT_TYPES=[{type_names}]")
-        if(not filename.startswith('.')):
+        if not filename.startswith('.'):
             if operations.createdSomething(type_names):
                 operations.handleFileCreated(path, filename)
 
