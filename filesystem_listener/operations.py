@@ -1,6 +1,7 @@
 import subprocess
 import settings
 
+
 def createdSomething(type_names):
     return True if (type_names[0] == "IN_MOVED_TO" or type_names[0] == "IN_CREATE") else False
 
@@ -8,7 +9,9 @@ def deletedSomething(type_names):
     return True if (type_names[0] == "IN_MOVED_FROM" or type_names[0] == "IN_DELETE") else False
 
 def callIcsPlugin(file):
-    subprocess.run([settings.loaded['ics_parser_bin'], file])
+    return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
+
+    print(return_data.stdout)
 
 def handleFileCreated(path, filename):
     file = path + '/' + filename

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Made to run with Python 3.6.7
+
 import os
 import sys
 import config_file_handler

@@ -2,7 +2,16 @@ import os
 
 def init():
     global loaded
-    loaded = None
+    loaded = {
+        'listen': [
+            os.environ['HOME']
+        ],
+        'recursive_listening': False,
+        'ignore_hidden': True,
+        'use_location': True,
+        'ics_parser_bin': "",
+        'use_agenda': True
+    }
 
     global default
     default = {
