@@ -3,9 +3,8 @@
 import os
 import sys
 import config_file_handler
-import listener
 
-settings = None
+import listener
 
 def _main():
     if(len(sys.argv) == 2):
@@ -21,9 +20,7 @@ def _main():
     else:
         settings = config_file_handler.parseConfigFile()
         print("Loaded settings = ", settings)
-        listener.listen(settings)
-        # listen(os.environ['HOME'])
-
+        listener.listen()
 
 if __name__ == '__main__':
     _main()
