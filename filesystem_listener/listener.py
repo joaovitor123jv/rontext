@@ -1,17 +1,13 @@
 import inotify.adapters
-import sys
-import os
 
-def listen(path):
-    i = inotify.adapters.InotifyTree(path)
+def listenPath(path):
+    # i = inotify.adapters.InotifyTree(path)
+    i = inotify.adapters.Inotify()
 
-    # i.add_watch(path)
-
-    # with open('/tmp/test_file', 'w'):
-    #     pass
+    i.add_watch(path)
     
-    # for event in i.event_gen(yield_nones = False):
-    for event in i.event_gen():
+    # for event in i.event_gen():
+    for event in i.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
 
         if(filename.startswith(".")):
@@ -19,22 +15,28 @@ def listen(path):
         else:
             print("PATH=[{}] FILENAME=[{}] EVENT_TYPES=[{}]".format(path, filename, type_names))
 
+def listen(settings):
+    listener = inotify.adapters.Inotify()
 
-def _main():
-    if(len(sys.argv) == 2):
-        print("Argument == ", sys.argv[1])
+    for path in settings['listen']:
+        print("Adding '", path, "' to listener")
+        listener.add_watch(path)
 
-        if(os.path.isdir(sys.argv[1])):
-            print("Argument is a directory, i'll start listening there so")
-            listen(sys.argv[1])
+    for event in listener.event_gen(yield_nones = False):
+        (_, type_names, path, filename) = event
 
-        else:
-            print("This directory doesnt exists")
+        if(not filename.startswith('.')):
+            if type_names[0] == "IN_MOVED_TO":
+                print("Created file, ", filename)
+                # print(f"PATH=[{path}] FILENAME=[{filename}] EVENT_TYPES=[{type_names}]")
+                if(filename.endswith('.ics')):
+                    print("\t\tCALENDAR FILE DETECTED!!! == ", filename)
 
-    else:
-        print("I'll listen in default directory, that is: ", os.environ['HOME'])
-        listen(os.environ['HOME'])
+            elif type_names[0] == "IN_MOVED_FROM":
+                print("Deleted file ", filename)
 
-
-if __name__ == '__main__':
-    _main()
+                if(filename.endswith('.ics')):
+                    print("\t\tCALENDAR FILE DETECTED!!! == ", filename)
+            
+            else:
+                print("Event type: ", type_names)
