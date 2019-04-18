@@ -27,5 +27,6 @@ def init():
         'ignore_hidden': True,
         'use_location': True,
         'ics_parser_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
-        'use_agenda': True
+        'use_agenda': True,
+        'database': "/home/joaovitor/ctxt_search-database.db"
     }

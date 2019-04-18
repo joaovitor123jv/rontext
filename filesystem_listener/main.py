@@ -6,6 +6,8 @@ import os
 import sys
 import config_file_handler
 
+import settings
+import database
 import listener
 
 def _main():
@@ -22,7 +24,16 @@ def _main():
     else:
         settings = config_file_handler.parseConfigFile()
         print("Loaded settings = ", settings)
+        database.connect()
+        database.setup_schema()
         listener.listen()
+
+def cleanup():
+    database.close()
+    exit(0)
+
+import atexit
+atexit.register(cleanup)
 
 if __name__ == '__main__':
     _main()
