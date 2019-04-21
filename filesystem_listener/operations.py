@@ -2,36 +2,67 @@ import subprocess
 import yaml
 from io import StringIO
 import settings
+import time_parser
+import database
 
-def createdSomething(type_names):
+# def createdSomething(type_names):
+def created_something(type_names):
     return True if (type_names[0] == "IN_MOVED_TO" or type_names[0] == "IN_CREATE") else False
 
-def deletedSomething(type_names):
+# def deletedSomething(type_names):
+def deleted_something(type_names):
     return True if (type_names[0] == "IN_MOVED_FROM" or type_names[0] == "IN_DELETE") else False
 
 def parse_yaml_string(string):
     fd = StringIO(string) # Cria um 'arquivo' em memória
     return yaml.load(fd) # Faz o parse do yaml
 
-def callIcsPlugin(file):
+
+def store_events(events):
+    if events != None:
+        normalized_events = []
+        for event in events:
+            start_time = time_parser.convert_to_python_datetime(event[':start'])
+            end_time = time_parser.convert_to_python_datetime(event[':end'])
+            summary = event[':summary']
+
+            normalized_events.append(( start_time, end_time, summary ))
+
+        database.store_events(normalized_events)
+
+
+def call_ics_plugin(file):
     return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
-
     parsed_return = parse_yaml_string(return_data.stdout.decode('utf8'))
+    store_events(parsed_return)
 
-    print(parsed_return[1])
 
-def handleFileCreated(path, filename):
+# def handleFileCreated(path, filename):
+def handle_file_created(path, filename):
     file = path + '/' + filename
-    print("Created file, ", file)
+
+    if filename.endswith('.ics'):
+        print("CREATE CALENDAR FILE DETECTED!!! == ", file)
+        call_ics_plugin(file)
+
+    elif file == (settings.loaded['database'] + '-journal'):
+        return
+
+    else:
+        print("Created file, ", file)
+        database.store_file(file)
+
+# def handleFileDeleted(path, filename):
+def handle_file_deleted(path, filename):
+    file = path + '/' + filename
 
     if(filename.endswith('.ics')):
-        print("\t\tCALENDAR FILE DETECTED!!! == ", file)
-        callIcsPlugin(file)
-
-def handleFileDeleted(path, filename):
-    file = path + '/' + filename
-    print("Deleted file ", file)
-
-    if(filename.endswith('.ics')):
-        print("\t\tCALENDAR FILE DETECTED!!! == ", file)
+        print("DELETE OF CALENDAR FILE DETECTED!!! == ", file)
         # callIcsPlugin(file)
+
+    elif file == (settings.loaded['database'] + '-journal'):
+        return
+
+    else:
+        print("Deleted file ", file)
+        database.delete_file_reference(file)

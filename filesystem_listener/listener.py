@@ -28,11 +28,11 @@ def listenOnlyVisible(listener):
         (_, type_names, path, filename) = event
 
         if not filename.startswith('.'):
-            if operations.createdSomething(type_names):
-                operations.handleFileCreated(path, filename)
+            if operations.created_something(type_names):
+                operations.handle_file_created(path, filename)
 
-            elif operations.deletedSomething(type_names):
-                operations.handleFileDeleted(path, filename)
+            elif operations.deleted_something(type_names):
+                operations.handle_file_deleted(path, filename)
             
             else:
                 print("Event type: ", type_names)
@@ -41,11 +41,11 @@ def listenAll(listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
 
-        if operations.createdSomething(type_names):
-            operations.handleFileCreated(path, filename)
+        if operations.created_something(type_names):
+            operations.handle_file_created(path, filename)
 
-        elif operations.deletedSomething(type_names):
-            operations.handleFileDeleted(path, filename)
+        elif operations.deleted_something(type_names):
+            operations.handle_file_deleted(path, filename)
         
         else:
             print("Event type: ", type_names)
