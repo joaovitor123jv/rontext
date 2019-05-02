@@ -60,10 +60,10 @@ def setup_schema():
             """)
 
             cursor.execute("""
-                CREATE TABLE locations (
-                    idlocations INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    latitude    INTEGER     NOT NULL,
-                    longitude   INTEGER     NOT NULL
+                CREATE TABLE localizations (
+                    idlocalizations INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    latitude        INTEGER     NOT NULL,
+                    longitude       INTEGER     NOT NULL
                 )
             """)
 
@@ -71,11 +71,11 @@ def setup_schema():
                 CREATE TABLE relations (
                     idrelations     INTEGER  NOT NULL        PRIMARY KEY     AUTOINCREMENT,
                     file_id         INTEGER  NOT NULL,
-                    location_id     INTEGER,
+                    localization_id INTEGER,
                     event_id        INTEGER,
                     time            DATETIME NOT NULL,
                     FOREIGN KEY(file_id)     REFERENCES files(idfiles),
-                    FOREIGN KEY(location_id) REFERENCES location(idlocations),
+                    FOREIGN KEY(localization_id) REFERENCES localization(idlocalizations),
                     FOREIGN KEY(event_id)    REFERENCES events(idevents)
                 )
             """)

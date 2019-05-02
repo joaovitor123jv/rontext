@@ -13,8 +13,8 @@ def _main():
 def generatePoint():
     if settings.loaded['use_mock']:
         raw_point = {
-            'latitude': settings.loaded['mock']['actual_location']['latitude'],
-            'longitude': settings.loaded['mock']['actual_location']['longitude']
+            'latitude': settings.loaded['mock']['actual_localization']['latitude'],
+            'longitude': settings.loaded['mock']['actual_localization']['longitude']
         }
 
         radius = settings.loaded['mock']['precision']

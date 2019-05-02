@@ -27,7 +27,7 @@ def _main():
         print("Loaded settings = ", loaded_settings)
         database.connect()
         database.setup_schema()
-        if settings.loaded['use_location']:
+        if settings.loaded['use_localization']:
             localization.start_plugin
 
         listener.listen()

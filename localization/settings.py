@@ -11,7 +11,7 @@ def init():
     default = {
         'use_mock': True,
         'mock': {
-            'actual_location': {
+            'actual_localization': {
                 'latitude': 50.21, # RANGE: -90 ~ 90
                 'longitude': -51.11 # RANGE: -180 ~ 180
             },

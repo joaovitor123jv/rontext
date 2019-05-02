@@ -4,12 +4,12 @@ import settings
 
 def listener():
     while True:
-        return_data = subprocess.run([settings.loaded['location_bin'], file], stdout=subprocess.PIPE)
+        return_data = subprocess.run([settings.loaded['localization'], file], stdout=subprocess.PIPE)
         parsed_return = parse_yaml_string(return_data.stdout.decode('utf8'))
 
         settings.runtime['localization'] = parsed_return
 
-        time.sleep(1) # Waits 1 second till the next localization check
+        time.sleep(settings.loaded['localization']) # Waits 1 second till the next localization check
 
 def start_plugin():
     print("Starting localization plugin")
