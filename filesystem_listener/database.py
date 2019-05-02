@@ -69,10 +69,11 @@ def setup_schema():
 
             cursor.execute("""
                 CREATE TABLE relations (
-                    idrelations     INTEGER NOT NULL        PRIMARY KEY     AUTOINCREMENT,
-                    file_id         INTEGER NOT NULL,
-                    location_id     INTEGER NOT NULL,
-                    event_id        INTEGER NOT NULL,
+                    idrelations     INTEGER  NOT NULL        PRIMARY KEY     AUTOINCREMENT,
+                    file_id         INTEGER  NOT NULL,
+                    location_id     INTEGER,
+                    event_id        INTEGER,
+                    time            DATETIME NOT NULL,
                     FOREIGN KEY(file_id)     REFERENCES files(idfiles),
                     FOREIGN KEY(location_id) REFERENCES location(idlocations),
                     FOREIGN KEY(event_id)    REFERENCES events(idevents)
