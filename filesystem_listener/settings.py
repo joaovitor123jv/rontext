@@ -20,8 +20,13 @@ def init():
         'recursive_listening': False,
         'ignore_hidden': True,
         'use_localization': True,
+        'localization_plugin_wait_time': 1, # Time, in seconds
         'localization_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py",
         'ics_parser_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
         'use_agenda': True,
         'database': "/home/joaovitor/ctxt_search-database.db"
     }
+
+def add_runtime(name, data):
+    global runtime
+    runtime[name] = data

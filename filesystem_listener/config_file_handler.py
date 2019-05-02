@@ -31,6 +31,7 @@ def parseConfigFile():
         with open(config_file_path, "r") as stream:
             try:
                 settings.loaded = yaml.load(stream)
+                settings.runtime = {}
                 return settings.loaded
             except yaml.YAMLError as exc:
                 print(exc)
