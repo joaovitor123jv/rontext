@@ -13,6 +13,9 @@ def init():
         'use_agenda': True
     }
 
+    global runtime
+    runtime = {}
+
     global default
     default = {
         'listen': [
@@ -26,6 +29,7 @@ def init():
         'recursive_listening': False,
         'ignore_hidden': True,
         'use_location': True,
+        'location_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py",
         'ics_parser_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
         'use_agenda': True,
         'database': "/home/joaovitor/ctxt_search-database.db"

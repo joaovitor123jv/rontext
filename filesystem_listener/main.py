@@ -9,6 +9,7 @@ import config_file_handler
 import settings
 import database
 import listener
+import localization
 
 def _main():
     if(len(sys.argv) == 2):
@@ -22,10 +23,13 @@ def _main():
             print("This directory doesnt exists")
 
     else:
-        settings = config_file_handler.parseConfigFile()
-        print("Loaded settings = ", settings)
+        loaded_settings = config_file_handler.parseConfigFile()
+        print("Loaded settings = ", loaded_settings)
         database.connect()
         database.setup_schema()
+        if settings.loaded['use_location']:
+            localization.start_plugin
+
         listener.listen()
 
 def cleanup():
