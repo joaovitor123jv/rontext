@@ -108,6 +108,13 @@ def store_events(events):
         cursor.executemany("INSERT INTO events (summary, start_time, end_time) VALUES (?, ?, ?)", events)
         connection.commit()
 
+def get_events():
+    global connection
+    if connection != None:
+        cursor = connection.cursor()
+        cursor.execute("SELECT start_time, end_time, summary FROM events")
+        return cursor.fetchall()
+
 # Cria um registro do arquivo na tabela de arquivos, se arquivo já não tiver sido armazenado anteriormente
 def store_file(path):
     global connection
@@ -134,7 +141,27 @@ def delete_file_reference(path):
             connection.commit()
             print(f"Registro de arquivo '{path}' removido do banco de dados")
 
+def get_localizations(main_tread=False):
+    if main_tread:
+        global connection
+    else:
+        connection = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
 
+    if connection != None:
+        cursor = connection.cursor()
+        cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
+
+        if not main_tread:
+            connection.close()
+
+        return cursor.fetchall()
+
+def store_localization(localization):
+    connection = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
+    if connection != None:
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO localizations (latitude, longitude) VALUES (?, ?)", (localization['latitude'], localization['longitude']))
+        connection.commit()
 
 
 

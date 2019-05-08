@@ -1,9 +1,8 @@
 import subprocess
-import yaml
-from io import StringIO
 import settings
 import time_parser
 import database
+import helpers
 
 # def createdSomething(type_names):
 def created_something(type_names):
@@ -12,11 +11,6 @@ def created_something(type_names):
 # def deletedSomething(type_names):
 def deleted_something(type_names):
     return True if (type_names[0] == "IN_MOVED_FROM" or type_names[0] == "IN_DELETE") else False
-
-def parse_yaml_string(string):
-    fd = StringIO(string) # Cria um 'arquivo' em memória
-    return yaml.load(fd) # Faz o parse do yaml
-
 
 def store_events(events):
     if events != None:
@@ -33,9 +27,13 @@ def store_events(events):
 
 def call_ics_plugin(file):
     return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
-    parsed_return = parse_yaml_string(return_data.stdout.decode('utf8'))
+    parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
     store_events(parsed_return)
 
+# THIS FUNCIONS MUST RETURN RELATIONSHIPS ID IF SOME
+# TODO
+def detect_relationships(file_id, actual_localization, actual_event):
+    pass
 
 # def handleFileCreated(path, filename):
 def handle_file_created(path, filename):
@@ -50,7 +48,8 @@ def handle_file_created(path, filename):
 
     else:
         print("Created file, ", file)
-        database.store_file(file)
+        file_id = database.store_file(file)
+        relationships = detect_relationships(file_id, helpers.get_actual_localization(), helpers.get_actual_event())
 
 # def handleFileDeleted(path, filename):
 def handle_file_deleted(path, filename):
