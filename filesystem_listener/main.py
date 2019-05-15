@@ -11,6 +11,9 @@ import database
 import listener
 import localization
 
+
+import threading
+
 def _main():
     if(len(sys.argv) == 2):
         print("Argument == ", sys.argv[1])
@@ -23,6 +26,7 @@ def _main():
             print("This directory doesnt exists")
 
     else:
+        print("**** MAIN_THREAD ID == ", threading.get_ident())
         loaded_settings = config_file_handler.parseConfigFile()
         print("Loaded settings = ", loaded_settings)
         database.connect()

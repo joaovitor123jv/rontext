@@ -1,28 +1,39 @@
 import sqlite3
 import settings
 
+
+import threading
+
+connection = {}
+
 def init():
     global connection
-    connection = None
+    connection = {}
 
 def connect():
     global connection
-    connection = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
+    connection[str(threading.get_ident())] = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
 
 def close():
     global connection
     if connection != None:
-        return connection.close()
+        for one_connection in connection:
+            one_connection.close()
 
 def is_connected():
     global connection
-    return True if connection != None else False
+    if str(threading.get_ident()) in connection:
+        return True if connection[str(threading.get_ident())] != None else False
+    else:
+        return False
+
+def get_connection():
+    global connection
+    return connection[str(threading.get_ident())]
 
 def is_database_ready():
-    global connection
-
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
 
         cursor.execute("""
             SELECT name FROM sqlite_master WHERE type='table' AND name='files';
@@ -35,13 +46,12 @@ def is_database_ready():
 
 
 def setup_schema():
-    global connection
-    if connection != None:
+    if is_connected():
         if is_database_ready():
             print("Table already created")
             return True
         else:
-            cursor = connection.cursor()
+            cursor = get_connection().cursor()
 
             cursor.execute("""
                 CREATE TABLE files (
@@ -83,85 +93,81 @@ def setup_schema():
             print("Table successfully created")
 
 def execute(command):
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.execute(command)
-        connection.commit()
+        get_connection().commit()
 
         print("Data successfully inserted")
 
 # In this case, data MUST be an array of paths (strings)
 def insert_many(data):
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.executemany("""
             INSERT INTO arquivos (path) 
             VALUES(?)
         """, data)
 
 def store_events(events):
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.executemany("INSERT INTO events (summary, start_time, end_time) VALUES (?, ?, ?)", events)
-        connection.commit()
+        get_connection().commit()
 
 def get_events():
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.execute("SELECT start_time, end_time, summary FROM events")
         return cursor.fetchall()
 
 # Cria um registro do arquivo na tabela de arquivos, se arquivo já não tiver sido armazenado anteriormente
 def store_file(path):
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
 
         cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
 
         if cursor.fetchall() == []:
             cursor.execute("INSERT INTO files (path) VALUES (?)", (path,))
-            connection.commit()
+            get_connection().commit()
             print(f"Registro de arquivo '{path}' adicionado ao banco de dados")
 
 # Remove o registro do arquivo na tabela de arquivos, se arquivo tiver sido armazenado anteriormente
 def delete_file_reference(path):
-    global connection
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
 
         cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
 
         if cursor.fetchall() != None:
             cursor.execute("DELETE FROM files WHERE path=?", (path,))
-            connection.commit()
+            get_connection().commit()
             print(f"Registro de arquivo '{path}' removido do banco de dados")
 
-def get_localizations(main_tread=False):
-    if main_tread:
-        global connection
-    else:
-        connection = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
-
-    if connection != None:
-        cursor = connection.cursor()
+def get_localizations():
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
+        return_data = cursor.fetchall()
 
-        if not main_tread:
-            connection.close()
+        return return_data
 
-        return cursor.fetchall()
+    else:
+        connect()
+        return get_localizations()
 
 def store_localization(localization):
-    connection = sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
-    if connection != None:
-        cursor = connection.cursor()
+    if is_connected():
+        cursor = get_connection().cursor()
         cursor.execute("INSERT INTO localizations (latitude, longitude) VALUES (?, ?)", (localization['latitude'], localization['longitude']))
-        connection.commit()
+        get_connection().commit()
+
+
+def store_relationship(relationship):
+    print("Relationship === ", relationship)
+
+
 
 
 

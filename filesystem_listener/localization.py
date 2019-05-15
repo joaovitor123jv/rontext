@@ -12,7 +12,7 @@ def point_inside_circle(point, circle):
     return (a + b) < (precision * precision)
 
 def already_in_database(localization):
-    stored_localizations = database.get_localizations(main_tread=False)
+    stored_localizations = database.get_localizations()
 
     if stored_localizations != None:
         for stored_localization in stored_localizations:
@@ -27,6 +27,7 @@ def already_in_database(localization):
     return False
 
 def listener():
+    print("**** SIDE_THREAD ID == ", threading.get_ident())
     while True:
         return_data = subprocess.run([settings.loaded['localization_bin']], stdout=subprocess.PIPE)
         parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))

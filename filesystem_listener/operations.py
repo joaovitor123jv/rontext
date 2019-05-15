@@ -32,8 +32,16 @@ def call_ics_plugin(file):
 
 # THIS FUNCIONS MUST RETURN RELATIONSHIPS ID IF SOME
 # TODO
-def detect_relationships(file_id, actual_localization, actual_event):
-    pass
+def get_relationships(file_id):
+    relationships = {
+        'file_id': file_id,
+        'localization': helpers.get_actual_localization(),
+        'event': helpers.get_actual_event()
+    }
+
+    return relationships
+
+
 
 # def handleFileCreated(path, filename):
 def handle_file_created(path, filename):
@@ -49,7 +57,9 @@ def handle_file_created(path, filename):
     else:
         print("Created file, ", file)
         file_id = database.store_file(file)
-        relationships = detect_relationships(file_id, helpers.get_actual_localization(), helpers.get_actual_event())
+        relationships = get_relationships(file_id)
+        database.store_relationship(relationships)
+
 
 # def handleFileDeleted(path, filename):
 def handle_file_deleted(path, filename):
