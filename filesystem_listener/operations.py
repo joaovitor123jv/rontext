@@ -3,12 +3,14 @@ import settings
 import time_parser
 import database
 import helpers
+import os
 
-# def createdSomething(type_names):
 def created_something(type_names):
     return True if (type_names[0] == "IN_MOVED_TO" or type_names[0] == "IN_CREATE") else False
 
-# def deletedSomething(type_names):
+def accessed_something(type_names):
+    return True if (type_names[0] == "IN_ACCESS") else False
+
 def deleted_something(type_names):
     return True if (type_names[0] == "IN_MOVED_FROM" or type_names[0] == "IN_DELETE") else False
 
@@ -30,17 +32,35 @@ def call_ics_plugin(file):
     parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
     store_events(parsed_return)
 
-# THIS FUNCIONS MUST RETURN RELATIONSHIPS ID IF SOME
-# TODO
 def get_relationships(file_id):
+    event_summary = None
+
+    event = helpers.get_actual_event()
+
+    if event != None:
+        event_summary = event[1]
+    else:
+        event_summary = "NULL"
+
     relationships = {
         'file_id': file_id,
-        'localization': helpers.get_actual_localization(),
-        'event': helpers.get_actual_event()
+        'localization_id': helpers.get_actual_localization(),
+        'event_summary': event_summary
     }
 
     return relationships
 
+def handle_access(path, filename):
+    file = path + '/' + filename
+
+    if os.path.isfile(file):
+        if not file.startswith('ctxt_search-'):
+            print(f"The file '{file}' was accessed, increasing hits counter")
+            file_id = database.store_file(file, 1)
+            print("************* FILE ID ==== ", file_id)
+            database.increase_file_hits(file)
+            relationships = get_relationships(file_id)
+            database.store_relationship(relationships)
 
 
 # def handleFileCreated(path, filename):
@@ -56,7 +76,7 @@ def handle_file_created(path, filename):
 
     else:
         print("Created file, ", file)
-        file_id = database.store_file(file)
+        file_id = database.store_file(file, 1)
         relationships = get_relationships(file_id)
         database.store_relationship(relationships)
 

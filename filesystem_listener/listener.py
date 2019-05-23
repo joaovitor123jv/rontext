@@ -33,6 +33,9 @@ def listenOnlyVisible(listener):
 
             elif operations.deleted_something(type_names):
                 operations.handle_file_deleted(path, filename)
+
+            elif operations.accessed_something(type_names):
+                operations.handle_access(path, filename)
             
             else:
                 print("Event type: ", type_names)
@@ -47,6 +50,9 @@ def listenAll(listener):
 
         elif operations.deleted_something(type_names):
             operations.handle_file_deleted(path, filename)
+
+        elif operations.accessed_something(type_names):
+            operations.handle_access(path, filename)
         
         else:
             print("Event type: ", type_names)

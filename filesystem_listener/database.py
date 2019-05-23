@@ -1,5 +1,6 @@
 import sqlite3
 import settings
+import datetime
 
 
 import threading
@@ -18,6 +19,7 @@ def close():
     global connection
     if connection != None:
         for one_connection in connection:
+            print("ONE_CONNECTION == ", one_connection)
             one_connection.close()
 
 def is_connected():
@@ -56,6 +58,7 @@ def setup_schema():
             cursor.execute("""
                 CREATE TABLE files (
                     idfiles     INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    hits        INTEGER NOT NULL,
                     path        TEXT    NOT NULL
                 )
             """)
@@ -82,11 +85,11 @@ def setup_schema():
                     idrelations     INTEGER  NOT NULL        PRIMARY KEY     AUTOINCREMENT,
                     file_id         INTEGER  NOT NULL,
                     localization_id INTEGER,
-                    event_id        INTEGER,
-                    time            DATETIME NOT NULL,
+                    event_summary   TEXT,
+                    last_access     DATETIME NOT NULL,
+                    hits            INTEGER NOT NULL,
                     FOREIGN KEY(file_id)     REFERENCES files(idfiles),
-                    FOREIGN KEY(localization_id) REFERENCES localization(idlocalizations),
-                    FOREIGN KEY(event_id)    REFERENCES events(idevents)
+                    FOREIGN KEY(localization_id) REFERENCES localization(idlocalizations)
                 )
             """)
 
@@ -122,16 +125,30 @@ def get_events():
         return cursor.fetchall()
 
 # Cria um registro do arquivo na tabela de arquivos, se arquivo já não tiver sido armazenado anteriormente
-def store_file(path):
+def store_file(path, hits=1):
     if is_connected():
         cursor = get_connection().cursor()
 
         cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
 
-        if cursor.fetchall() == []:
-            cursor.execute("INSERT INTO files (path) VALUES (?)", (path,))
+        response = cursor.fetchone()
+
+        if response == [] or response == None:
+            cursor.execute("INSERT INTO files (path, hits) VALUES (?, ?)", (path, hits))
             get_connection().commit()
-            print(f"Registro de arquivo '{path}' adicionado ao banco de dados")
+            cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
+            response = cursor.fetchone()
+            print(f"Registro de arquivo '{path}' adicionado ao banco de dados, ID == {response}")
+
+        return response[0]
+
+def increase_file_hits(path):
+    if is_connected():
+        cursor = get_connection().cursor()
+        cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
+        get_connection().commit()
+        print(f"Hits do arquivo '{path}' atualizado no banco de dados")
+
 
 # Remove o registro do arquivo na tabela de arquivos, se arquivo tiver sido armazenado anteriormente
 def delete_file_reference(path):
@@ -164,11 +181,75 @@ def store_localization(localization):
         get_connection().commit()
 
 
+def insert_relationship(relationship, cursor):
+    if settings.loaded['use_agenda']:
+        if settings.loaded['use_localization']:
+            cursor.execute("INSERT INTO relations (file_id, localization_id, event_summary, last_access, hits) VALUES (?, ?, ?, ?, 1)", (
+                relationship['file_id'], relationship['localization_id'], relationship['event_summary'], datetime.datetime.now()
+            ))
+        else:
+            cursor.execute("INSERT INTO relations (file_id, event_summary, last_access, hits) VALUES (?, ?, ?, 1)", (
+                relationship['file_id'], relationship['event_summary'], datetime.datetime.now()
+            ))
+    else:
+        if settings.loaded['use_localization']:
+            cursor.execute("INSERT INTO relations (file_id, localization_id, last_access, hits) VALUES (?, ?, ?, 1)", (
+                relationship['file_id'], relationship['localization_id'], datetime.datetime.now()
+            ))
+        else:
+            return False
+    get_connection().commit()
+
+def update_relationship(relation_data, cursor):
+    cursor.execute("UPDATE relations SET hits=hits+1, last_access=? WHERE idrelations=?", (datetime.datetime.now(), relation_data[0][0]))
+    get_connection().commit()
+
+# TODO: Armazenar as relações
 def store_relationship(relationship):
     print("Relationship === ", relationship)
+    if is_connected():
+        cursor = get_connection().cursor()
+
+        relation_data = None
+        query = None
+
+        if settings.loaded['use_agenda']:
+            if settings.loaded['use_localization']:
+                cursor.execute("""
+                    SELECT idrelations 
+                    FROM relations 
+                    WHERE file_id = ?  AND localization_id = ?  AND event_summary = ?
+                """, (relationship['file_id'], relationship['localization_id'], relationship['event_summary']))
+            else:
+                cursor.execute("""
+                    SELECT idrelations 
+                    FROM relations 
+                    WHERE file_id = ?  AND event_summary = ?
+                """, (relationship['file_id'], relationship['event_summary']))
+        else:
+            if settings.loaded['use_localization']:
+                cursor.execute("""
+                    SELECT idrelations 
+                    FROM relations 
+                    WHERE file_id = ?  AND localization_id = ?
+                """, (relationship['file_id'], relationship['localization_id']))
+
+            else:
+                print("No context data supplied, no relations can be found")
+                return False
 
 
+        relation_data = cursor.fetchall()
 
+        print(" RELATION_DATA === ", relation_data)
+
+        if relation_data != []:
+            print("Found relationship in database, updating values")
+            update_relationship(relation_data, cursor)
+
+        else:
+            print("Can't found this relationship in database, inserting a new one")
+            insert_relationship(relationship, cursor)
 
 
 
