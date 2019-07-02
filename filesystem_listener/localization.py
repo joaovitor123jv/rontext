@@ -35,10 +35,11 @@ def listener():
         settings.add_runtime('localization', parsed_return)
 
         if already_in_database(settings.runtime['localization']):
-            print("Localization already in database, skipping")
+            # print("Localization already in database, skipping")
+            pass
 
         else:
-            print("Localization is not in database, inserting")
+            # print("Localization is not in database, inserting")
             database.store_localization(settings.runtime['localization'])
 
 

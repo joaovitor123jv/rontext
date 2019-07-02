@@ -101,7 +101,7 @@ def execute(command):
         cursor.execute(command)
         get_connection().commit()
 
-        print("Data successfully inserted")
+        # print("Data successfully inserted")
 
 # In this case, data MUST be an array of paths (strings)
 def insert_many(data):
@@ -138,7 +138,7 @@ def store_file(path, hits=1):
             get_connection().commit()
             cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
             response = cursor.fetchone()
-            print(f"Registro de arquivo '{path}' adicionado ao banco de dados, ID == {response}")
+            print(f"Arquivo '{path}' no banco")
 
         return response[0]
 
@@ -147,7 +147,7 @@ def increase_file_hits(path):
         cursor = get_connection().cursor()
         cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
         get_connection().commit()
-        print(f"Hits do arquivo '{path}' atualizado no banco de dados")
+        # print(f"Hits do arquivo '{path}' atualizado no banco de dados")
 
 
 # Remove o registro do arquivo na tabela de arquivos, se arquivo tiver sido armazenado anteriormente
@@ -160,7 +160,7 @@ def delete_file_reference(path):
         if cursor.fetchall() != None:
             cursor.execute("DELETE FROM files WHERE path=?", (path,))
             get_connection().commit()
-            print(f"Registro de arquivo '{path}' removido do banco de dados")
+            # print(f"Registro de arquivo '{path}' removido do banco de dados")
 
 def get_localizations():
     if is_connected():
@@ -206,7 +206,7 @@ def update_relationship(relation_data, cursor):
 
 # TODO: Armazenar as relações
 def store_relationship(relationship):
-    print("Relationship === ", relationship)
+    # print("Relationship === ", relationship)
     if is_connected():
         cursor = get_connection().cursor()
 
@@ -216,39 +216,39 @@ def store_relationship(relationship):
         if settings.loaded['use_agenda']:
             if settings.loaded['use_localization']:
                 cursor.execute("""
-                    SELECT idrelations 
-                    FROM relations 
+                    SELECT idrelations
+                    FROM relations
                     WHERE file_id = ?  AND localization_id = ?  AND event_summary = ?
                 """, (relationship['file_id'], relationship['localization_id'], relationship['event_summary']))
             else:
                 cursor.execute("""
-                    SELECT idrelations 
-                    FROM relations 
+                    SELECT idrelations
+                    FROM relations
                     WHERE file_id = ?  AND event_summary = ?
                 """, (relationship['file_id'], relationship['event_summary']))
         else:
             if settings.loaded['use_localization']:
                 cursor.execute("""
-                    SELECT idrelations 
-                    FROM relations 
+                    SELECT idrelations
+                    FROM relations
                     WHERE file_id = ?  AND localization_id = ?
                 """, (relationship['file_id'], relationship['localization_id']))
 
             else:
-                print("No context data supplied, no relations can be found")
+                # print("No context data supplied, no relations can be found")
                 return False
 
 
         relation_data = cursor.fetchall()
 
-        print(" RELATION_DATA === ", relation_data)
+        # print(" RELATION_DATA === ", relation_data)
 
         if relation_data != []:
-            print("Found relationship in database, updating values")
+            # print("Found relationship in database, updating values")
             update_relationship(relation_data, cursor)
 
         else:
-            print("Can't found this relationship in database, inserting a new one")
+            # print("Can't found this relationship in database, inserting a new one")
             insert_relationship(relationship, cursor)
 
 

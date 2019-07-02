@@ -34,19 +34,43 @@ def call_ics_plugin(file):
 
 def get_relationships(file_id):
     event_summary = None
+    event = None
+    relationships = None
 
-    event = helpers.get_actual_event()
+    if settings.loaded['use_agenda']:
+        event = helpers.get_actual_event()
 
     if event != None:
         event_summary = event[1]
     else:
         event_summary = "NULL"
 
-    relationships = {
-        'file_id': file_id,
-        'localization_id': helpers.get_actual_localization(),
-        'event_summary': event_summary
-    }
+    if settings.loaded['use_localization'] and settings.loaded['use_agenda']:
+        relationships = {
+            'file_id': file_id,
+            'localization_id': helpers.get_actual_localization(),
+            'event_summary': event_summary
+        }
+    elif settings.loaded['use_localization']:
+        relationships = {
+            'file_id': file_id,
+            'localization_id': helpers.get_actual_localization(),
+            'event_summary': None
+        }
+
+    elif settings.loaded['use_agenda']:
+        relationships = {
+            'file_id': file_id,
+            'localization_id': None,
+            'event_summary': event_summary
+        }
+
+    else:
+        relationships = {
+            'file_id': file_id,
+            'localization_id': None,
+            'event_summary': None
+        }
 
     return relationships
 
@@ -55,9 +79,9 @@ def handle_access(path, filename):
 
     if os.path.isfile(file):
         if not file.startswith('ctxt_search-'):
-            print(f"The file '{file}' was accessed, increasing hits counter")
+            # print(f"The file '{file}' was accessed, increasing hits counter")
             file_id = database.store_file(file, 1)
-            print("************* FILE ID ==== ", file_id)
+            # print("************* FILE ID ==== ", file_id)
             database.increase_file_hits(file)
             relationships = get_relationships(file_id)
             database.store_relationship(relationships)
@@ -68,14 +92,14 @@ def handle_file_created(path, filename):
     file = path + '/' + filename
 
     if filename.endswith('.ics'):
-        print("CREATE CALENDAR FILE DETECTED!!! == ", file)
+        # print("CREATE CALENDAR FILE DETECTED!!! == ", file)
         call_ics_plugin(file)
 
     elif file == (settings.loaded['database'] + '-journal'):
         return
 
     else:
-        print("Created file, ", file)
+        # print("Created file, ", file)
         file_id = database.store_file(file, 1)
         relationships = get_relationships(file_id)
         database.store_relationship(relationships)
@@ -86,12 +110,12 @@ def handle_file_deleted(path, filename):
     file = path + '/' + filename
 
     if(filename.endswith('.ics')):
-        print("DELETE OF CALENDAR FILE DETECTED!!! == ", file)
-        # callIcsPlugin(file)
+        # print("DELETE OF CALENDAR FILE DETECTED!!! == ", file)
+        callIcsPlugin(file)
 
     elif file == (settings.loaded['database'] + '-journal'):
         return
 
     else:
-        print("Deleted file ", file)
+        # print("Deleted file ", file)
         database.delete_file_reference(file)

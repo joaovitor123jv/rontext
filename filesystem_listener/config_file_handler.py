@@ -17,7 +17,7 @@ def createDefaultConfigFile():
     with io.open(config_file_path, "r") as stream:
         data_loaded = yaml.load(stream)
         if(data == data_loaded):
-            print("File created successfully, adding to settings") 
+            print("File created successfully, adding to settings")
             settings.loaded = data_loaded
             return data
         else:
@@ -35,7 +35,7 @@ def parseConfigFile():
                 return settings.loaded
             except yaml.YAMLError as exc:
                 print(exc)
-    
+
     else:
         print("Configuration file doesn't exists, Creating default file")
         return createDefaultConfigFile()

@@ -32,8 +32,32 @@ def get_actual_localization():
 
     return False
 
+def get_mock_time():
+    with open(settings.loaded['mock_time_localization'], "r") as stream:
+        try:
+            data = yaml.load(stream)
+            # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
+            if data == None:
+                print("ERRO!!!!: DATA ATUAL == NONE")
+
+            else:
+                settings.add_runtime('actual_time', data['time'])
+            # return data['time'] # Já é datetime
+
+        except yaml.YAMLError as exc:
+            print(exc)
+            return None
+
 def get_actual_event():
-    actual_time = datetime.datetime.now()
+    actual_time = None
+
+    if settings.loaded['use_time_mock']:
+        get_mock_time()
+        actual_time = settings.runtime['actual_time']
+    else:
+        actual_time = datetime.datetime.now()
+
+    print("Actual Time == ", actual_time)
 
     stored_events = database.get_events()
 
