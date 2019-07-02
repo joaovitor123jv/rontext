@@ -6,7 +6,7 @@ import datetime
 
 def parse_yaml_string(string):
     fd = StringIO(string) # Cria um 'arquivo' em memória
-    return yaml.load(fd) # Faz o parse do yaml
+    return yaml.load(fd, Loader=yaml.Loader) # Faz o parse do yaml
 
 def point_inside_circle(point, circle):
     precision = float(settings.loaded["localization_precision"])

@@ -110,8 +110,8 @@ def handle_file_deleted(path, filename):
     file = path + '/' + filename
 
     if(filename.endswith('.ics')):
-        # print("DELETE OF CALENDAR FILE DETECTED!!! == ", file)
-        callIcsPlugin(file)
+        print("File calendar deleted: ", file)
+        # callIcsPlugin(file)
 
     elif file == (settings.loaded['database'] + '-journal'):
         return

@@ -1,6 +1,7 @@
 import sqlite3
 import settings
 import datetime
+import time
 
 
 import threading
@@ -138,6 +139,10 @@ def store_file(path, hits=1):
             get_connection().commit()
             cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
             response = cursor.fetchone()
+            if path == '/home/joaovitor/experimentos/dados/START':
+                settings.add_runtime('start_timestamp', time.time())
+            elif path == '/home/joaovitor/experimentos/dados/END':
+                print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
             print(f"Arquivo '{path}' no banco")
 
         return response[0]

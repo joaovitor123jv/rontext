@@ -15,7 +15,7 @@ def createDefaultConfigFile():
         yaml.dump(data, outfile, default_flow_style=False, allow_unicode=True)
 
     with io.open(config_file_path, "r") as stream:
-        data_loaded = yaml.load(stream)
+        data_loaded = yaml.load(stream, Loader=yaml.FullLoader)
         if(data == data_loaded):
             print("File created successfully, adding to settings")
             settings.loaded = data_loaded
@@ -30,7 +30,7 @@ def parseConfigFile():
     if(os.path.isfile(config_file_path)):
         with open(config_file_path, "r") as stream:
             try:
-                settings.loaded = yaml.load(stream)
+                settings.loaded = yaml.load(stream, Loader=yaml.FullLoader)
                 settings.runtime = {}
                 return settings.loaded
             except yaml.YAMLError as exc:
