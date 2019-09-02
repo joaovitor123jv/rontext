@@ -143,6 +143,7 @@ def store_file(path, hits=1):
                 settings.add_runtime('start_timestamp', time.time())
             elif path == '/home/joaovitor/experimentos/dados/END':
                 print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
+                exit(0)
             print(f"Arquivo '{path}' no banco")
 
         return response[0]
