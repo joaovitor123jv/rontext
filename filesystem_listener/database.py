@@ -94,6 +94,8 @@ def setup_schema():
                 )
             """)
 
+            get_connection().commit()
+
             print("Table successfully created")
 
 def execute(command):
@@ -112,6 +114,7 @@ def insert_many(data):
             INSERT INTO arquivos (path) 
             VALUES(?)
         """, data)
+        get_connection().commit()
 
 def store_events(events):
     if is_connected():

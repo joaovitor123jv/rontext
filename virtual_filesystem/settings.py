@@ -8,7 +8,7 @@ class Settings:
     def __init__(self):
         self.loaded = {}
         self.runtime = {}
-        self.config_file_path = os.environ['HOME'] + "/ctxt_search-config.yml"
+        self.config_file_path = os.environ['HOME'] + "/.ctxt_search-config.yml"
 
         if(os.path.isfile(self.config_file_path)):
             with open(self.config_file_path, "r") as stream:

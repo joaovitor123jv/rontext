@@ -78,7 +78,7 @@ def handle_access(path, filename):
     file = path + '/' + filename
 
     if os.path.isfile(file):
-        if not file.startswith('ctxt_search-'):
+        if not file.startswith('.ctxt_search-'):
             # print(f"The file '{file}' was accessed, increasing hits counter")
             file_id = database.store_file(file, 1)
             # print("************* FILE ID ==== ", file_id)

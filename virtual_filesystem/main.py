@@ -13,42 +13,14 @@ import errno
 
 from fuse import FUSE, FuseOSError, Operations
 
-
 import sqlite3
 from settings import Settings
+from data_source import DataSource
 import datetime
 import time
-
+import localization
 
 import threading
-
-
-
-class DataSource:
-    def __init__(self):
-        self.settings = Settings()
-        self.connection = sqlite3.connect(self.settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
-
-    def is_database_ready():
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='files';")
-        return False if cursor.fetchone() == None else True
-
-    # Retorna todos os eventos ocorridos
-    def get_events(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT start_time, end_time, summary FROM events")
-        return cursor.fetchall()
-
-    def get_localizations(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
-        return_data = cursor.fetchall()
-        return return_data
-
-    def close(self):
-        if self.connection != None:
-            self.connection.close()
 
 
 class VirtualFileSystem(Operations):
@@ -56,6 +28,8 @@ class VirtualFileSystem(Operations):
         # TODO: Alterar coisas aqui (database_path antes era 'root')
         self.data_source = DataSource()
         # self.root = self.data_source.settings.loaded['database']
+        if self.data_source.settings.loaded['use_localization']:
+            localization.start_plugin(self.data_source)
 
         # Tests
         self.root = "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/virtual_filesystem/mountpoint/"
@@ -68,6 +42,7 @@ class VirtualFileSystem(Operations):
             partial = partial[1:]
         path = os.path.join(self.root, partial)
         return path
+        # return partial
 
     def get_mount_point(self):
         return self.data_source.settings.loaded['mountpoint']
@@ -78,25 +53,42 @@ class VirtualFileSystem(Operations):
     def access(self, path, mode):
         full_path = self._full_path(path)
         print("Operação : ACCESS on ", full_path) # FUNCAO COMPLETA
-        if not os.access(full_path, mode):
+
+        if full_path == self.root:
+            if not os.access(full_path, mode):
+                raise FuseOSError(errno.EACCES)
+        elif path[1:] in self.data_source.map:
+            if not os.access(self.data_source.map[path[1:]], mode):
+                raise FuseOSError(errno.EACCES)
+        elif not os.access(full_path, mode):
             raise FuseOSError(errno.EACCES)
 
     def chmod(self, path, mode):
         full_path = self._full_path(path)
-        return os.chmod(full_path, mode)
+
+        if full_path == self.root:
+            return os.chmod(full_path, mode)
+        elif path[1:] in self.data_source.map:
+            return os.chmod(self.data_source.map[path[1:]], mode)
+        else:
+            return os.chmod(full_path, mode)
 
     def chown(self, path, uid, gid):
         full_path = self._full_path(path)
-        return os.chown(full_path, uid, gid)
+
+        if full_path == self.root:
+            return os.chown(full_path, uid, gid)
+        elif path[1:] in self.data_source.map:
+            return os.chown(self.data_source.map[path[1:]], uid, gid)
+        else:
+            return os.chown(full_path, uid, gid)
+
 
     def getattr(self, path, fh=None):
-        print("\n----------------------------")
         full_path = self._full_path(path)
         st = None
 
         if full_path == self.root:
-            print("Buscando arquivos da root")
-            # st = os.lstat(full_path)
             st = os.stat_result((
                 16877, # Modo (permissoes)
                 3672400, # The inode number
@@ -110,15 +102,12 @@ class VirtualFileSystem(Operations):
                 1566354473 # st_ctime (timestamp da modificação de metadados mais recente)
                 ))
         else:
-            # print("Operação : GETATTR on ", full_path)
-            st = os.lstat(full_path)
-
-        # print("ST == ", st)
+            if path[1:] in self.data_source.map:
+                st = os.lstat(self.data_source.map[path[1:]])
+            else:
+                st = os.lstat(full_path)
 
         data = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime', 'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
-
-        print("DATA == ", data)
-
         return data
 
     # Busca o que tem dentro de um diretório (retorna nomes com o yield)
@@ -126,10 +115,21 @@ class VirtualFileSystem(Operations):
         print("\n----- READDIR -----")
         full_path = self._full_path(path)
 
+
         dirents = ['.', '..']
+        database_return = self.data_source.get_files()
+        self.data_source.update_file_map(database_return)
+
+        for path in self.data_source.map:
+            # parsed_path = str(data[0][(str(data[0]).rfind('/') + 1):])
+            # parsed_path = str(data[0])
+            print("Arquivos = ", path)
+            dirents.append(path)
+
         if os.path.isdir(full_path):
             dirents.extend(os.listdir(full_path))
 
+        print("Full path == ", full_path)
         print("dirents == ", dirents)
 
         for r in dirents:
@@ -144,18 +144,46 @@ class VirtualFileSystem(Operations):
             return pathname
 
     def mknod(self, path, mode, dev):
-        return os.mknod(self._full_path(path), mode, dev)
+        full_path = self._full_path(path)
+
+        if full_path == self.root:
+            return os.mknod(full_path, mode, dev)
+        elif path[1:] in self.data_source.map:
+            return os.mknod(self.data_source.map[path[1:]], mode, dev)
+        else:
+            return os.mknod(full_path, mode, dev)
 
     def rmdir(self, path):
         full_path = self._full_path(path)
-        return os.rmdir(full_path)
+
+        if full_path == self.root:
+            return os.rmdir(full_path)
+        elif path[1:] in self.data_source.map:
+            return os.rmdir(self.data_source.map[path[1:]])
+        else:
+            return os.rmdir(full_path)
 
     def mkdir(self, path, mode):
-        return os.mkdir(self._full_path(path), mode)
+        full_path = self._full_path(path)
+
+        if full_path == self.root:
+            return os.mkdir(full_path, mode)
+        elif path[1:] in self.data_source.map:
+            return os.mkdir(self.data_source.map[path[1:]], mode)
+        else:
+            return os.mkdir(full_path, mode)
 
     def statfs(self, path):
         full_path = self._full_path(path)
-        stv = os.statvfs(full_path)
+        stv = None
+
+        if full_path == self.root:
+            stv = os.statvfs(full_path)
+        elif path[1:] in self.data_source.map:
+            stv = os.statvfs(seld.data_source.map[path[1:]])
+        else:
+            stv = os.statvfs(full_path)
+
         return dict((key, getattr(stv, key)) for key in (
             'f_bavail',
             'f_bfree',
@@ -169,14 +197,37 @@ class VirtualFileSystem(Operations):
             'f_namemax'
         ))
 
+
     def unlink(self, path):
-        return os.unlink(self._full_path(path))
+        full_path = self._full_path(path)
+
+        if full_path == self.root:
+            return os.unlink(full_path)
+        elif path[1:] in self.data_source.map:
+            return os.unlink(self.data_source.map[path[1:]])
+        else:
+            return os.unlink(full_path)
+
 
     def symlink(self, name, target):
-        return os.symlink(name, self._full_path(target))
+        full_path = self._full_path(target)
+
+        if full_path == self.root:
+            return os.symlink(name, full_path)
+        elif path[1:] in self.data_source.map:
+            return os.symlink(name, self.data_source.map[path[1:]])
+        else:
+            return os.symlink(name, full_path)
 
     def rename(self, old, new):
-        return os.rename(self._full_path(old), self._full_path(new))
+        full_path = self._full_path(old)
+
+        if full_path == self.root:
+            return os.rename(full_path, full_path)
+        elif path[1:] in self.data_source.map:
+            return os.rename(self.data_source.map[path[1:]], self.data_source.map[path[1:]])
+        else:
+            return os.rename(full_path, full_path)
 
     def link(self, target, name):
         return os.link(self._full_path(target), self._full_path(name))
@@ -189,12 +240,29 @@ class VirtualFileSystem(Operations):
 
     def open(self, path, flags):
         full_path = self._full_path(path)
-        data = os.open(full_path, flags)
+        data = None
+
+        if full_path == self.root:
+            data = os.open(full_path, flags)
+        elif path[1:] in self.data_source.map:
+            data = os.open(self.data_source.map[path[1:]], flags)
+        else:
+            data = os.open(full_path, flags)
+
         return data
 
     def create(self, path, mode, fi=None):
         full_path = self._full_path(path)
-        return os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
+        data = None
+
+        if full_path == self.root:
+            data = os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
+        elif path[1:] in self.data_source.map:
+            data = os.open(self.data_source.map[path[1:]], os.O_WRONLY | os.O_CREAT, mode)
+        else:
+            data = os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
+
+        return data
 
     def read(self, path, length, offset, fh):
         print("Operação : READ")

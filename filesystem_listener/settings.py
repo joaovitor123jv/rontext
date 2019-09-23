@@ -26,7 +26,7 @@ def init():
         'localization_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py",
         'ics_parser_bin': "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
         'use_agenda': True,
-        'database': "/home/joaovitor/ctxt_search-database.db",
+        'database': "/home/joaovitor/.ctxt_search-database.db",
         'mountpoint': "/home/joaovitor/Rontext/"
     }
 
