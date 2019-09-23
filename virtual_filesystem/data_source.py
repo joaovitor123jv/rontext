@@ -1,5 +1,6 @@
 import sqlite3
 from settings import Settings
+from helpers import get_date_from_event
 import datetime
 import time
 
@@ -83,16 +84,18 @@ class DataSource:
         actual_time = self.get_time()
 
         print("Actual Time == ", actual_time)
+        print("Using UTC in calendar ?", self.settings.loaded['event_dates_in_utc'])
         stored_events = self.get_events()
         for stored_event in stored_events:
             # print("----")
-            # print("Stored stert event time == ", datetime.datetime.strptime(stored_event[2], '%Y-%m-%d %H:%M:%S'))
-            # print("Stored stop event time == ", datetime.datetime.strptime(stored_event[0], '%Y-%m-%d %H:%M:%S'))
-            # print("Actural time == ", actual_time)
-            if datetime.datetime.strptime(stored_event[2], '%Y-%m-%d %H:%M:%S') <= actual_time: # if the start_event time was before
+            # print("Stored stert event time == ", get_date_from_event(stored_event[2], self.settings))
+            # print("Stored stop event time == ", get_date_from_event(stored_event[0], self.settings))
+            # print("Event summary == ", stored_event[1])
+            # print("Actual time == ", actual_time)
+            if get_date_from_event(stored_event[2], self.settings) <= actual_time: # if the start_event time was before
                 # print("\tEvent already started")
-                if datetime.datetime.strptime(stored_event[0], '%Y-%m-%d %H:%M:%S') >= actual_time: # if the end_event still not done
-                    print("\t------------------------ IN EVENT: ", stored_event[1]) # Show event summary
+                if get_date_from_event(stored_event[0], self.settings) >= actual_time: # if the end_event still not done
+                    # print("\t------------------------ IN EVENT: ", stored_event[1]) # Show event summary
                     return stored_event # returns the found event
             # print("----")
 

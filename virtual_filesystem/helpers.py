@@ -1,5 +1,7 @@
 from io import StringIO
 import yaml
+import datetime
+import time
 
 def point_inside_circle(point, circle, settings):
     a = (point["latitude"] - circle["latitude"]) * (point["latitude"] - circle["latitude"])
@@ -11,3 +13,10 @@ def parse_yaml_string(string):
     fd = StringIO(string) # Cria um 'arquivo' em memória
     return yaml.load(fd, Loader=yaml.Loader) # Faz o parse do yaml
 
+def get_date_from_event(event_date, settings=None):
+    if (settings == None) or (not settings.loaded['event_dates_in_utc']):
+        return datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S')
+    else:
+        now_timestamp = time.time()
+        offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+        return (datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S') + offset)
