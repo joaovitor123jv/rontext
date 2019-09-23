@@ -3,6 +3,7 @@ import yaml
 import settings
 import database
 import datetime
+import time
 
 def parse_yaml_string(string):
     fd = StringIO(string) # Cria um 'arquivo' em memória
@@ -48,6 +49,14 @@ def get_mock_time():
             print(exc)
             return None
 
+def get_date_from_event(event_date, using_utc=False):
+    if using_utc:
+        now_timestamp = time.time()
+        offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+        return (datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S') + offset)
+    else:
+        return datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S')
+
 def get_actual_event():
     actual_time = None
 
@@ -62,8 +71,8 @@ def get_actual_event():
     stored_events = database.get_events()
 
     for stored_event in stored_events:
-        if datetime.datetime.strptime(stored_event[2], '%Y-%m-%d %H:%M:%S') <= actual_time: # if the start_event time was before
-            if datetime.datetime.strptime(stored_event[0], '%Y-%m-%d %H:%M:%S') >= actual_time: # if the end_event still not done
+        if get_date_from_event(stored_event[2], settings.loaded['event_dates_in_utc']) <= actual_time: # if the start_event time was before
+            if get_date_from_event(stored_event[0], settings.loaded['event_dates_in_utc']) >= actual_time: # if the end_event still not done
                 print("IN EVENT: ", stored_event[1]) # Show event summary
                 return stored_event # returns the found event
 
