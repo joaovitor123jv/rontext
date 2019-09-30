@@ -1,0 +1,27 @@
+database: /home/joaovitor/.ctxt_search-database.db
+ics_parser_bin: /home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb
+ignore_hidden: true
+listen:
+- /home/joaovitor/Documentos
+- /home/joaovitor/Documentos/MEI
+- /home/joaovitor/Documentos/UFG-CDC
+- /home/joaovitor/Documentos/UFG-CDC/Cálculo
+- /home/joaovitor/Documentos/UFG-CDC/Computação Gráfica
+- /home/joaovitor/Documentos/UFG-CDC/Direito
+- /home/joaovitor/Documentos/UFG-CDC/PFC
+- /home/joaovitor/Documentos/UFG-CDC/PFC/PFC2
+- /home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Monografia
+- /home/joaovitor/Documentos/iMusics/Anotacoes
+- /home/joaovitor/Vídeos
+- /home/joaovitor/Imagens
+- /home/joaovitor/Downloads
+- /home/joaovitor
+localization_bin: /home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py
+localization_plugin_wait_time: 1
+localization_precision: 0.01
+mountpoint: /home/joaovitor/Rontext/
+recursive_listening: false
+use_agenda: true
+use_localization: true
+use_time_mock: false
+event_dates_in_utc: true

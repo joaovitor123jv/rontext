@@ -1,0 +1,6 @@
+mock:
+  actual_localization:
+    latitude: 50.21
+    longitude: -51.11
+  precision: 0.001
+use_mock: true

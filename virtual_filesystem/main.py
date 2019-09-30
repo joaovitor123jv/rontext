@@ -112,7 +112,7 @@ class VirtualFileSystem(Operations):
 
     # Busca o que tem dentro de um diretório (retorna nomes com o yield)
     def readdir(self, path, fh):
-        print("\n----- READDIR -----")
+        # print("\n----- READDIR -----")
         full_path = self._full_path(path)
 
 
@@ -123,14 +123,14 @@ class VirtualFileSystem(Operations):
         for path in self.data_source.map:
             # parsed_path = str(data[0][(str(data[0]).rfind('/') + 1):])
             # parsed_path = str(data[0])
-            print("Arquivos = ", path)
+            # print("Arquivos = ", path)
             dirents.append(path)
 
         if os.path.isdir(full_path):
             dirents.extend(os.listdir(full_path))
 
-        print("Full path == ", full_path)
-        print("dirents == ", dirents)
+        # print("Full path == ", full_path)
+        # print("dirents == ", dirents)
 
         for r in dirents:
             yield r
@@ -180,7 +180,7 @@ class VirtualFileSystem(Operations):
         if full_path == self.root:
             stv = os.statvfs(full_path)
         elif path[1:] in self.data_source.map:
-            stv = os.statvfs(seld.data_source.map[path[1:]])
+            stv = os.statvfs(self.data_source.map[path[1:]])
         else:
             stv = os.statvfs(full_path)
 
@@ -265,7 +265,7 @@ class VirtualFileSystem(Operations):
         return data
 
     def read(self, path, length, offset, fh):
-        print("Operação : READ")
+        # print("Operação : READ")
         os.lseek(fh, offset, os.SEEK_SET)
         return os.read(fh, length)
 

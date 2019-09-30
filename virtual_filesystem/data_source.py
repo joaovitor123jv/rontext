@@ -3,6 +3,7 @@ from settings import Settings
 from helpers import get_date_from_event
 import datetime
 import time
+import yaml
 
 import threading
 
@@ -34,7 +35,7 @@ class DataSource:
         cursor = self.connection.cursor()
         cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
         return_data = cursor.fetchall()
-        print(f"Found this localizations: {return_data}")
+        # print(f"Found this localizations: {return_data}")
         return return_data
 
     def get_actual_localization(self):
@@ -60,7 +61,7 @@ class DataSource:
     def get_mock_time(self):
         with open(self.settings.loaded['mock_time_localization'], "r") as stream:
             try:
-                data = yaml.load(stream)
+                data = yaml.load(stream, Loader=yaml.FullLoader)
                 # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
                 if data == None:
                     print("ERRO!!!!: DATA ATUAL == NONE")
@@ -70,21 +71,21 @@ class DataSource:
                 # return data['time'] # Já é datetime
 
             except yaml.YAMLError as exc:
-                print(exc)
+                # print(exc)
                 return None
 
     def get_time(self):
         if self.settings.loaded['use_time_mock']:
             self.get_mock_time()
-            return settings.runtime['actual_time']
+            return self.settings.runtime['actual_time']
         else:
             return datetime.datetime.now()
 
     def get_actual_event(self):
         actual_time = self.get_time()
 
-        print("Actual Time == ", actual_time)
-        print("Using UTC in calendar ?", self.settings.loaded['event_dates_in_utc'])
+        # print("Actual Time == ", actual_time)
+        # print("Using UTC in calendar ?", self.settings.loaded['event_dates_in_utc'])
         stored_events = self.get_events()
         for stored_event in stored_events:
             # print("----")
@@ -114,9 +115,9 @@ class DataSource:
         if event != None:
             event_summary = event[1]
 
-        print("----------- GET FILES --------------")
-        print(f"Localization == {localization}")
-        print(f"Event summary == {event_summary}")
+        # print("----------- GET FILES --------------")
+        # print(f"Localization == {localization}")
+        # print(f"Event summary == {event_summary}")
 
         cursor = self.connection.cursor()
         max_results = 10
@@ -134,8 +135,8 @@ class DataSource:
                     """, (localization, event_summary, max_results))
 
         elif localization != None:
-            print(f"Localization = {localization}")
-            print(f"Max results = {max_results}")
+            # print(f"Localization = {localization}")
+            # print(f"Max results = {max_results}")
             cursor.execute("""
                     SELECT f.path 
                     FROM relations AS r 
