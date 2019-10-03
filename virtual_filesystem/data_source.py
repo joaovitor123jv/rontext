@@ -26,10 +26,9 @@ class DataSource:
 
     def update_file_map(self, full_paths):
         self.map = {}
-        # parsed_path = str(data[0][(str(data[0]).rfind('/') + 1):])
         for full_path in full_paths:
-            partial_path = str(full_path[0][(str(full_path[0]).rfind('/') + 1):])
-            self.map[partial_path] = str(full_path[0])
+            partial_path = str(full_path[0][(str(full_path[0]).rfind('/') + 1):]) # Separate file name "/home/joaovitor/Documentos/Alexia" -> "Alexia"
+            self.map[partial_path] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
 
     def get_localizations(self):
         cursor = self.connection.cursor()

@@ -22,16 +22,12 @@ import localization
 
 import threading
 
-
 class VirtualFileSystem(Operations):
     def __init__(self):
-        # TODO: Alterar coisas aqui (database_path antes era 'root')
         self.data_source = DataSource()
-        # self.root = self.data_source.settings.loaded['database']
         if self.data_source.settings.loaded['use_localization']:
             localization.start_plugin(self.data_source)
 
-        # Tests
         self.root = "/home/joaovitor/Documentos/UFG-CDC/PFC/PFC2/Sistema/virtual_filesystem/mountpoint/"
 
     # Helpers
@@ -40,8 +36,7 @@ class VirtualFileSystem(Operations):
     def _full_path(self, partial):
         if partial.startswith("/"):
             partial = partial[1:]
-        path = os.path.join(self.root, partial)
-        return path
+        return os.path.join(self.root, partial)
         # return partial
 
     def get_mount_point(self):
@@ -52,13 +47,16 @@ class VirtualFileSystem(Operations):
 
     def access(self, path, mode):
         full_path = self._full_path(path)
-        print("Operação : ACCESS on ", full_path) # FUNCAO COMPLETA
+        print(f"\n-- ACCESS   path = {path}") # FUNCAO COMPLETA
 
-        if full_path == self.root:
-            if not os.access(full_path, mode):
-                raise FuseOSError(errno.EACCES)
-        elif path[1:] in self.data_source.map:
-            if not os.access(self.data_source.map[path[1:]], mode):
+        # if full_path == self.root:
+        #     if not os.access(full_path, mode):
+        #         raise FuseOSError(errno.EACCES)
+        # if path == '/actual_context':
+        if path == '/actual_context':
+            return
+        elif path[16:] in self.data_source.map:
+            if not os.access(self.data_source.map[path[16:]], mode):
                 raise FuseOSError(errno.EACCES)
         elif not os.access(full_path, mode):
             raise FuseOSError(errno.EACCES)
@@ -68,8 +66,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.chmod(full_path, mode)
-        elif path[1:] in self.data_source.map:
-            return os.chmod(self.data_source.map[path[1:]], mode)
+        elif path[16:] in self.data_source.map:
+            return os.chmod(self.data_source.map[path[16:]], mode)
         else:
             return os.chmod(full_path, mode)
 
@@ -78,8 +76,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.chown(full_path, uid, gid)
-        elif path[1:] in self.data_source.map:
-            return os.chown(self.data_source.map[path[1:]], uid, gid)
+        elif path[16:] in self.data_source.map:
+            return os.chown(self.data_source.map[path[16:]], uid, gid)
         else:
             return os.chown(full_path, uid, gid)
 
@@ -87,53 +85,59 @@ class VirtualFileSystem(Operations):
     def getattr(self, path, fh=None):
         full_path = self._full_path(path)
         st = None
+        virtual_file_or_dir = False
 
-        if full_path == self.root:
+        if path in ['/', '/actual_context']: # Correct
+            virtual_file_or_dir = True
             st = os.stat_result((
                 16877, # Modo (permissoes)
-                3672400, # The inode number
-                2053, # st_dev (identificador do dispositivo /dev/*)
+                None, # The inode number
+                2023, # st_dev (identificador do dispositivo /dev/*)
                 3, # st_nlink (number of hard links)
-                1000, # st_uid (user ID do dono do arquivo)
-                1000, # st_gid (group ID do dono do arquivo)
+                os.geteuid(), # st_uid (user ID do dono do arquivo)
+                os.getegid(), # st_gid (group ID do dono do arquivo)
                 4096, # st_size (tamanho do arquivo em Bytes)
                 1566354491, # st_atime (timestamp do acesso mais recente)
                 1566354473, # st_mtime (timestamp da modificação mais recente)
                 1566354473 # st_ctime (timestamp da modificação de metadados mais recente)
-                ))
+            ))
+
         else:
-            if path[1:] in self.data_source.map:
-                st = os.lstat(self.data_source.map[path[1:]])
+            # if path[16:] in self.data_source.map:
+            if len(path) >= 16: # "/actual_context/file_name"  ->  "file_name"
+                if path[16:] in self.data_source.map:
+                    st = os.lstat(self.data_source.map[path[16:]])
+                else:
+                    st = os.lstat(full_path)
             else:
                 st = os.lstat(full_path)
 
         data = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime', 'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        # print(f"-- GETATTR   path = {path}, full_path={full_path}, data = {data}")
+        print(f"-- GETATTR   path = {path}, full_path={full_path}")
         return data
 
     # Busca o que tem dentro de um diretório (retorna nomes com o yield)
     def readdir(self, path, fh):
-        # print("\n----- READDIR -----")
         full_path = self._full_path(path)
-
-
         dirents = ['.', '..']
-        database_return = self.data_source.get_files()
-        self.data_source.update_file_map(database_return)
 
-        for path in self.data_source.map:
-            # parsed_path = str(data[0][(str(data[0]).rfind('/') + 1):])
-            # parsed_path = str(data[0])
-            # print("Arquivos = ", path)
-            dirents.append(path)
+        if(full_path == self.root):
+            dirents.append('actual_context')
+        elif(full_path == (self.root + 'actual_context')):
+            database_return = self.data_source.get_files()
+            self.data_source.update_file_map(database_return)
 
-        if os.path.isdir(full_path):
-            dirents.extend(os.listdir(full_path))
+            for relative_path in self.data_source.map:
+                # print("Arquivos = ", path)
+                dirents.append(relative_path)
 
-        # print("Full path == ", full_path)
-        # print("dirents == ", dirents)
+        # if os.path.isdir(full_path):
+        #     dirents.extend(os.listdir(full_path))
 
-        for r in dirents:
-            yield r
+        print(f"-- READDIR   path = {path}, Dirents = {dirents}")
+        for dirent in dirents:
+            yield dirent
 
     def readlink(self, path):
         pathname = os.readlink(self._full_path(path))
@@ -148,8 +152,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.mknod(full_path, mode, dev)
-        elif path[1:] in self.data_source.map:
-            return os.mknod(self.data_source.map[path[1:]], mode, dev)
+        elif path[16:] in self.data_source.map:
+            return os.mknod(self.data_source.map[path[16:]], mode, dev)
         else:
             return os.mknod(full_path, mode, dev)
 
@@ -158,8 +162,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.rmdir(full_path)
-        elif path[1:] in self.data_source.map:
-            return os.rmdir(self.data_source.map[path[1:]])
+        elif path[16:] in self.data_source.map:
+            return os.rmdir(self.data_source.map[path[16:]])
         else:
             return os.rmdir(full_path)
 
@@ -168,19 +172,20 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.mkdir(full_path, mode)
-        elif path[1:] in self.data_source.map:
-            return os.mkdir(self.data_source.map[path[1:]], mode)
+        elif path[16:] in self.data_source.map:
+            return os.mkdir(self.data_source.map[path[16:]], mode)
         else:
             return os.mkdir(full_path, mode)
 
     def statfs(self, path):
         full_path = self._full_path(path)
+        print(f"-- STATFS   path = {path}")
         stv = None
 
         if full_path == self.root:
             stv = os.statvfs(full_path)
-        elif path[1:] in self.data_source.map:
-            stv = os.statvfs(self.data_source.map[path[1:]])
+        elif path[16:] in self.data_source.map:
+            stv = os.statvfs(self.data_source.map[path[16:]])
         else:
             stv = os.statvfs(full_path)
 
@@ -197,14 +202,13 @@ class VirtualFileSystem(Operations):
             'f_namemax'
         ))
 
-
     def unlink(self, path):
         full_path = self._full_path(path)
 
         if full_path == self.root:
             return os.unlink(full_path)
-        elif path[1:] in self.data_source.map:
-            return os.unlink(self.data_source.map[path[1:]])
+        elif path[16:] in self.data_source.map:
+            return os.unlink(self.data_source.map[path[16:]])
         else:
             return os.unlink(full_path)
 
@@ -214,8 +218,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.symlink(name, full_path)
-        elif path[1:] in self.data_source.map:
-            return os.symlink(name, self.data_source.map[path[1:]])
+        elif path[16:] in self.data_source.map:
+            return os.symlink(name, self.data_source.map[path[16:]])
         else:
             return os.symlink(name, full_path)
 
@@ -224,8 +228,8 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             return os.rename(full_path, full_path)
-        elif path[1:] in self.data_source.map:
-            return os.rename(self.data_source.map[path[1:]], self.data_source.map[path[1:]])
+        elif path[16:] in self.data_source.map:
+            return os.rename(self.data_source.map[path[16:]], self.data_source.map[path[16:]])
         else:
             return os.rename(full_path, full_path)
 
@@ -243,12 +247,16 @@ class VirtualFileSystem(Operations):
         data = None
 
         if full_path == self.root:
+            print(f"-- OPEN   IN ROOT")
             data = os.open(full_path, flags)
-        elif path[1:] in self.data_source.map:
-            data = os.open(self.data_source.map[path[1:]], flags)
+        elif path[16:] in self.data_source.map:
+            print(f"-- OPEN   FOUND KEY")
+            data = os.open(self.data_source.map[path[16:]], flags)
         else:
+            print(f"-- OPEN   OTHER")
             data = os.open(full_path, flags)
 
+        print(f"-- OPEN  path: {path}, data = {data}")
         return data
 
     def create(self, path, mode, fi=None):
@@ -257,15 +265,15 @@ class VirtualFileSystem(Operations):
 
         if full_path == self.root:
             data = os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
-        elif path[1:] in self.data_source.map:
-            data = os.open(self.data_source.map[path[1:]], os.O_WRONLY | os.O_CREAT, mode)
+        elif path[16:] in self.data_source.map:
+            data = os.open(self.data_source.map[path[16:]], os.O_WRONLY | os.O_CREAT, mode)
         else:
             data = os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
 
         return data
 
     def read(self, path, length, offset, fh):
-        # print("Operação : READ")
+        print(f"-- READ   path = {path}")
         os.lseek(fh, offset, os.SEEK_SET)
         return os.read(fh, length)
 
@@ -288,15 +296,11 @@ class VirtualFileSystem(Operations):
         return self.flush(path, fh)
 
 
-# def main(mountpoint, database_path):
 def main():
     vfs = VirtualFileSystem()
     FUSE(vfs, vfs.get_mount_point(), nothreads=True, foreground=True)
 
 if __name__ == '__main__':
-    # mountpoint = sys.argv[2]
-    # database_path = sys.argv[1]
-    # main(mountpoint, database_path)
     main()
 
 
