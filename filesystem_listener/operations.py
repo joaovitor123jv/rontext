@@ -9,7 +9,7 @@ def created_something(type_names):
     return True if (type_names[0] == "IN_MOVED_TO" or type_names[0] == "IN_CREATE") else False
 
 def accessed_something(type_names):
-    return True if (type_names[0] == "IN_ACCESS") else False
+    return True if (type_names[0] == "IN_OPEN") else False
 
 def deleted_something(type_names):
     return True if (type_names[0] == "IN_MOVED_FROM" or type_names[0] == "IN_DELETE") else False
@@ -79,7 +79,7 @@ def handle_access(path, filename):
 
     if os.path.isfile(file):
         if not file.startswith('.ctxt_search-'):
-            # print(f"The file '{file}' was accessed, increasing hits counter")
+            print(f"The file '{file}' was opened, increasing hits counter")
             file_id = database.store_file(file, 1)
             # print("************* FILE ID ==== ", file_id)
             database.increase_file_hits(file)
