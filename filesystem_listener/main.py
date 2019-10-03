@@ -15,26 +15,15 @@ import localization
 import threading
 
 def _main():
-    if(len(sys.argv) == 2):
-        print("Argument == ", sys.argv[1])
+    print("**** MAIN_THREAD ID == ", threading.get_ident())
+    loaded_settings = config_file_handler.parseConfigFile()
+    print("Loaded settings = ", loaded_settings)
+    database.connect()
+    database.setup_schema()
+    if loaded_settings['use_localization']:
+        localization.start_plugin()
 
-        if(os.path.isdir(sys.argv[1])):
-            print("Argument is a directory, i'll start listening there so")
-            listener.listenPath(sys.argv[1])
-
-        else:
-            print("This directory doesnt exists")
-
-    else:
-        print("**** MAIN_THREAD ID == ", threading.get_ident())
-        loaded_settings = config_file_handler.parseConfigFile()
-        print("Loaded settings = ", loaded_settings)
-        database.connect()
-        database.setup_schema()
-        if loaded_settings['use_localization']:
-            localization.start_plugin()
-
-        listener.listen()
+    listener.listen()
 
 def cleanup():
     database.close()

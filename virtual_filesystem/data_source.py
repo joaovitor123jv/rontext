@@ -27,14 +27,13 @@ class DataSource:
     def update_file_map(self, full_paths):
         self.map = {}
         for full_path in full_paths:
-            partial_path = str(full_path[0][(str(full_path[0]).rfind('/') + 1):]) # Separate file name "/home/joaovitor/Documentos/Alexia" -> "Alexia"
+            partial_path = str(full_path[0][(str(full_path[0]).rfind('/') + 1):]) # Separate file name "/home/user/Documents/test" -> "test"
             self.map[partial_path] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
 
     def get_localizations(self):
         cursor = self.connection.cursor()
         cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
         return_data = cursor.fetchall()
-        # print(f"Found this localizations: {return_data}")
         return return_data
 
     def get_actual_localization(self):
@@ -63,11 +62,11 @@ class DataSource:
                 data = yaml.load(stream, Loader=yaml.FullLoader)
                 # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
                 if data == None:
-                    print("ERRO!!!!: DATA ATUAL == NONE")
+                    print("ERROR: actual date == None")
 
                 else:
                     self.settings.add_runtime('actual_time', data['time'])
-                # return data['time'] # Já é datetime
+                # return data['time'] # Already a datetime
 
             except yaml.YAMLError as exc:
                 # print(exc)
@@ -123,59 +122,50 @@ class DataSource:
 
         if localization != None and event_summary != None:
             cursor.execute("""
-                    SELECT f.path 
-                    FROM relations AS r 
+                    SELECT f.path
+                    FROM relations AS r
                     INNER JOIN files AS f
-                    WHERE localization_id=? 
-                        AND event_summary=? 
+                    WHERE localization_id=?
+                        AND event_summary=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC 
+                    ORDER BY r.hits DESC
                     LIMIT 0, ?;
                     """, (localization, event_summary, max_results))
 
         elif localization != None:
-            # print(f"Localization = {localization}")
-            # print(f"Max results = {max_results}")
             cursor.execute("""
-                    SELECT f.path 
-                    FROM relations AS r 
+                    SELECT f.path
+                    FROM relations AS r
                     INNER JOIN files AS f
-                    WHERE localization_id=? 
+                    WHERE localization_id=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC 
+                    ORDER BY r.hits DESC
                     LIMIT 0, ?;
                     """, (localization, max_results))
 
         elif event_summary != None:
             cursor.execute("""
                     SELECT f.path
-                    FROM relations AS r 
+                    FROM relations AS r
                     INNER JOIN files AS f
-                    WHERE event_summary=? 
+                    WHERE event_summary=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC 
+                    ORDER BY r.hits DESC
                     LIMIT 0, ?;
                     """, (event_summary, max_results))
 
         else:
             cursor.execute("""
-                    SELECT f.path 
-                    FROM relations AS r 
+                    SELECT f.path
+                    FROM relations AS r
                     INNER JOIN files AS f
                     WHERE f.idfiles=r.file_id
-                    ORDER BY r.hits DESC 
+                    ORDER BY r.hits DESC
                     LIMIT 0, ?;
                     """, (max_results,))
 
         return cursor.fetchall()
 
-        #
-        # if localization != None:
-        #
-        # else:
-
-
     def close(self):
         if self.connection != None:
             self.connection.close()
-

@@ -76,6 +76,7 @@ def get_relationships(file_id):
 
 def handle_access(path, filename):
     file = path + '/' + filename
+    print(f"file = |{filename}|")
 
     if os.path.isfile(file):
         if not file.startswith('.ctxt_search-'):

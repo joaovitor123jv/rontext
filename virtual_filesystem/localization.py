@@ -8,7 +8,6 @@ def listener():
     global data_source
     print("**** SIDE_THREAD ID == ", threading.get_ident())
     while True:
-        # print("RODANDO")
         return_data = subprocess.run([data_source.settings.loaded['localization_bin']], stdout=subprocess.PIPE)
         parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
         data_source.settings.add_runtime('localization', parsed_return)
