@@ -18,6 +18,11 @@ def init():
             os.environ['HOME'] + "/Downloads"
         ],
         'recursive_listening': False,
+        'ignore_occurrences': [
+            # Ignore all specified directories or files which contains defined substrings
+            # If empty, listen all.
+            # 'node_modules'
+        ],
         # 'recursive_listening': True,
         'ignore_hidden': True,
         'use_localization': True,

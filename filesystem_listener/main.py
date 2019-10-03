@@ -11,7 +11,6 @@ import database
 import listener
 import localization
 
-
 import threading
 
 def _main():

@@ -8,6 +8,7 @@ def listen():
         print("LOG: Enabling recursive listening in ", settings.loaded['listen'][0])
         try:
             listener = inotify.adapters.InotifyTree(settings.loaded['listen'][0])
+            print("LOG: listener created")
         except PermissionError:
             print("FAILED to add one directory to listening")
 
@@ -26,32 +27,23 @@ def listen():
 def listenOnlyVisible(listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
-
-        if not filename.startswith('.') and not filename.startswith('.ctxt_search-'):
-            if operations.created_something(type_names):
+        if not filename.startswith('.'):
+            if operations.created_something(type_names, path):
                 operations.handle_file_created(path, filename)
-
-            elif operations.deleted_something(type_names):
+            elif operations.deleted_something(type_names, path):
                 operations.handle_file_deleted(path, filename)
-
-            elif operations.accessed_something(type_names):
-                print(f"ONLY VISIBLE Type names == {type_names}")
+            elif operations.accessed_something(type_names, path):
                 operations.handle_access(path, filename)
 
 def listenAll(listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
-
-        if operations.created_something(type_names):
+        if operations.created_something(type_names, path):
             operations.handle_file_created(path, filename)
-
-        elif operations.deleted_something(type_names):
+        elif operations.deleted_something(type_names, path):
             operations.handle_file_deleted(path, filename)
-
-        elif operations.accessed_something(type_names):
-            print(f"LISTEN ALL Type names == {type_names}")
+        elif operations.accessed_something(type_names, path):
             operations.handle_access(path, filename)
-
         # else:
         #     print("Event type: ", type_names)
         #     print("Filename: ", filename)
