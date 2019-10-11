@@ -12,6 +12,10 @@ class DataSource:
         self.settings = Settings()
         self.connection = sqlite3.connect(self.settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
         self.map = {}
+        self.file_by_localization_map = {}
+        self.file_by_event_map = {}
+        self.localization_map = {}
+        self.event_map = {}
 
     def is_database_ready(self):
         cursor = self.connection.cursor()
@@ -27,12 +31,45 @@ class DataSource:
     def update_file_map(self, full_paths):
         self.map = {}
         for full_path in full_paths:
-            partial_path = str(full_path[0][(str(full_path[0]).rfind('/') + 1):]) # Separate file name "/home/user/Documents/test" -> "test"
-            self.map[partial_path] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
+            keys = str(full_path[0]).split("/")
+            last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
+            self.map[last_key] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
+
+    def update_localization_map(self, full_localizations):
+        self.localization_map = {}
+        for localization in full_localizations:
+            pretty_name = None
+            if localization[3] != None:
+                pretty_name = str(localization[3]) # Localization name
+            else:
+                pretty_name = str(localization[0]) # Localization ID
+
+            self.localization_map[pretty_name] = str(localization[0]) # Stores a Localization ID (content) related to pretty_name (key)
+
+    def update_event_map(self, full_events):
+        self.event_map = {}
+        for event in full_events:
+            pretty_name = str(event[1]) # event ID
+
+            self.event_map[pretty_name] = pretty_name # Stores a Localization ID (content) related to pretty_name (key)
+
+    def update_file_by_localization_map(self, localization_key, full_paths):
+        self.file_by_localization_map[localization_key] = {}
+        for full_path in full_paths:
+            keys = str(full_path[0]).split("/")
+            last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
+            self.file_by_localization_map[localization_key][last_key] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
+
+    def update_file_by_event_map(self, event_key, full_paths):
+        self.file_by_event_map[event_key] = {}
+        for full_path in full_paths:
+            keys = str(full_path[0]).split("/")
+            last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
+            self.file_by_event_map[event_key][last_key] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
 
     def get_localizations(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
+        cursor.execute("SELECT idlocalizations, latitude, longitude, name FROM localizations")
         return_data = cursor.fetchall()
         return return_data
 
@@ -53,7 +90,7 @@ class DataSource:
 
     def get_events(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT start_time, end_time, summary FROM events")
+        cursor.execute("SELECT start_time, end_time, summary FROM events ORDER BY idevents DESC")
         return cursor.fetchall()
 
     def get_mock_time(self):
@@ -81,22 +118,11 @@ class DataSource:
 
     def get_actual_event(self):
         actual_time = self.get_time()
-
-        # print("Actual Time == ", actual_time)
-        # print("Using UTC in calendar ?", self.settings.loaded['event_dates_in_utc'])
         stored_events = self.get_events()
         for stored_event in stored_events:
-            # print("----")
-            # print("Stored stert event time == ", get_date_from_event(stored_event[2], self.settings))
-            # print("Stored stop event time == ", get_date_from_event(stored_event[0], self.settings))
-            # print("Event summary == ", stored_event[1])
-            # print("Actual time == ", actual_time)
             if get_date_from_event(stored_event[2], self.settings) <= actual_time: # if the start_event time was before
-                # print("\tEvent already started")
                 if get_date_from_event(stored_event[0], self.settings) >= actual_time: # if the end_event still not done
-                    # print("\t------------------------ IN EVENT: ", stored_event[1]) # Show event summary
                     return stored_event # returns the found event
-            # print("----")
 
 
     def get_files(self):
@@ -165,6 +191,47 @@ class DataSource:
                     """, (max_results,))
 
         return cursor.fetchall()
+
+    def get_files_by(self, type_key, item_key):
+        cursor = self.connection.cursor()
+        max_results = 10
+
+        if type_key == 'localization':
+            if self.localization_map == {}:
+                self.update_localization_map( self.get_localizations() )
+
+            localization = self.localization_map[item_key]
+            cursor.execute("""
+                    SELECT f.path
+                    FROM relations AS r
+                    INNER JOIN files AS f
+                    WHERE localization_id=?
+                        AND f.idfiles=r.file_id
+                    ORDER BY r.hits DESC
+                    LIMIT 0, ?;
+                    """, (localization, max_results))
+            return cursor.fetchall()
+
+        elif type_key == 'event':
+            if self.event_map == {}:
+                self.update_event_map( self.get_events() )
+
+            event = self.event_map[item_key]
+            cursor.execute("""
+                    SELECT f.path
+                    FROM relations AS r
+                    INNER JOIN files AS f
+                    WHERE event_summary=?
+                        AND f.idfiles=r.file_id
+                    ORDER BY r.hits DESC
+                    LIMIT 0, ?;
+                    """, (item_key, max_results))
+            return cursor.fetchall()
+
+        else:
+            print("Yet not implemented")
+
+        return None
 
     def close(self):
         if self.connection != None:

@@ -20,3 +20,16 @@ def get_date_from_event(event_date, settings=None):
         now_timestamp = time.time()
         offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
         return (datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S') + offset)
+
+def get_file_name(path):
+    keys = path.split("/")
+    return keys[len(keys) - 1]
+
+def get_path_info(path):
+    keys = path.split("/")
+    divisions = len(keys)
+    return {
+        'file_name': keys[divisions - 1],
+        'parent_directory': keys[divisions - 2],
+        'divisions': divisions
+    }

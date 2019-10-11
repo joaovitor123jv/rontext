@@ -11,14 +11,15 @@ aberturas de arquivos
   isso, vou realizar um teste de inserção novamente e comparar com os
   resultados dos testes já obtidos só por precaução.
 
+1. Verificar a possibilidade de ter as pastas:
+    * uma por evento (implementado)
+    * uma por localização (implementado)
 
 ### O que ainda preciso fazer:
-1. Verificar a possibilidade de ter as pastas:
-    * uma por evento
-    * uma por localização
 2. Pensar na validação do sistema
     * Validação e verificação de software
     * Teste caixa preta
+    * Pensar em como vou escrever a validação (querys)
 
 3. Experimentar 
 
@@ -49,3 +50,6 @@ vezes, dependendo do player de música
   Durante o tempo de inserção desses milhares de arquivos, literalmente, o
   retorno do sistema foi muito lento, o dispositivo de armazenamento estava sobrecarregado.
 
+* O Listening recursivo não é suportado diretamente pelo kernel, a biblioteca
+  que estou utilizando provê uma abstração que simula essa funcionalidade
+  adicionando diretórios ao listener quando encontra novos diretórios.

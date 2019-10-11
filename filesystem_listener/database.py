@@ -77,7 +77,8 @@ def setup_schema():
                 CREATE TABLE localizations (
                     idlocalizations INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,
                     latitude        INTEGER     NOT NULL,
-                    longitude       INTEGER     NOT NULL
+                    longitude       INTEGER     NOT NULL,
+                    name            TEXT
                 )
             """)
 
