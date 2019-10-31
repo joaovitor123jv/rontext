@@ -51,7 +51,9 @@ class VirtualFileSystem(Operations):
     # ==================
 
     def access(self, path, mode):
-        if path in ['/actual_context', localization_directory, event_directory]:
+        if (path in ['/actual_context', localization_directory, event_directory]
+                or self.localization_pattern.match(path)
+                or self.event_pattern.match(path)):
             return
         elif path.startswith('/actual_context/'):
             if path[16:] in self.data_source.map:
