@@ -194,10 +194,9 @@ class VirtualFileSystem(Operations):
             for relative_path in self.data_source.file_by_event_map[event_key]:
                 dirents.append(relative_path)
 
-        print("Dados do diretório = ", dirents)
-
         for dirent in dirents:
-            print("Retornando diretorio ", dirent)
+            if '/' in dirent:
+                dirent = dirent.replace('/', '|')
             yield dirent
 
     def readlink(self, path):
@@ -224,36 +223,38 @@ class VirtualFileSystem(Operations):
         return os.mknod(self._full_path(path), mode, dev)
 
     def rmdir(self, path):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.rmdir(self.data_source.map[path[16:]])
-        elif path.startswith(localization_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
-                    return os.rmdir(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']])
-        elif path.startswith(event_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
-                    return os.rmdir(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']])
-        return os.rmdir(self._full_path(path))
+        pass
+        # if path.startswith('/actual_context/'):
+        #     if path[16:] in self.data_source.map:
+        #         return os.rmdir(self.data_source.map[path[16:]])
+        # elif path.startswith(localization_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+        #             return os.rmdir(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']])
+        # elif path.startswith(event_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+        #             return os.rmdir(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']])
+        # return os.rmdir(self._full_path(path))
 
     def mkdir(self, path, mode):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.mkdir(self.data_source.map[path[16:]], mode)
-        elif path.startswith(localization_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
-                    return os.mkdir(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']], mode)
-        elif path.startswith(event_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
-                    return os.mkdir(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']], mode)
-        return os.mkdir(self._full_path(path), mode)
+        pass
+        # if path.startswith('/actual_context/'):
+        #     if path[16:] in self.data_source.map:
+        #         return os.mkdir(self.data_source.map[path[16:]], mode)
+        # elif path.startswith(localization_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+        #             return os.mkdir(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']], mode)
+        # elif path.startswith(event_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+        #             return os.mkdir(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']], mode)
+        # return os.mkdir(self._full_path(path), mode)
 
     def statfs(self, path):
         stv = None
@@ -311,27 +312,28 @@ class VirtualFileSystem(Operations):
         return os.symlink(name, self._full_path(target))
 
     def rename(self, old, new):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.rename(self.data_source.map[path[16:]], self.data_source.map[path[16:]])
-        elif path.startswith(localization_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
-                    return os.rename(
-                        self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']],
-                        self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']]
-                    )
-        elif path.startswith(event_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
-                    return os.rename(
-                        self.data_source.file_by_event_map[info['parent_directory']][info['file_name']],
-                        self.data_source.file_by_event_map[info['parent_directory']][info['file_name']]
-                    )
-        full_path = self._full_path(old)
-        return os.rename(full_path, full_path)
+        pass
+        # if path.startswith('/actual_context/'):
+        #     if path[16:] in self.data_source.map:
+        #         return os.rename(self.data_source.map[path[16:]], self.data_source.map[path[16:]])
+        # elif path.startswith(localization_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+        #             return os.rename(
+        #                 self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']],
+        #                 self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']]
+        #             )
+        # elif path.startswith(event_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+        #             return os.rename(
+        #                 self.data_source.file_by_event_map[info['parent_directory']][info['file_name']],
+        #                 self.data_source.file_by_event_map[info['parent_directory']][info['file_name']]
+        #             )
+        # full_path = self._full_path(old)
+        # return os.rename(full_path, full_path)
 
     def link(self, target, name):
         return os.link(self._full_path(target), self._full_path(name))
@@ -360,20 +362,21 @@ class VirtualFileSystem(Operations):
         return os.open(self._full_path(path), flags)
 
     def create(self, path, mode, fi=None):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.open(self.data_source.map[path[16:]], os.O_WRONLY | os.O_CREAT, mode)
-        elif path.startswith(localization_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
-                    return os.open(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']], os.O_WRONLY | os.O_CREAT, mode)
-        elif path.startswith(event_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
-                    return os.open(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']], os.O_WRONLY | os.O_CREAT, mode)
-        return os.open(self._full_path(path), os.O_WRONLY | os.O_CREAT, mode)
+        pass
+        # if path.startswith('/actual_context/'):
+        #     if path[16:] in self.data_source.map:
+        #         return os.open(self.data_source.map[path[16:]], os.O_WRONLY | os.O_CREAT, mode)
+        # elif path.startswith(localization_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+        #             return os.open(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']], os.O_WRONLY | os.O_CREAT, mode)
+        # elif path.startswith(event_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+        #             return os.open(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']], os.O_WRONLY | os.O_CREAT, mode)
+        # return os.open(self._full_path(path), os.O_WRONLY | os.O_CREAT, mode)
 
 
     def read(self, path, length, offset, fh):
