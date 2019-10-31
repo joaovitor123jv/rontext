@@ -51,7 +51,7 @@ class VirtualFileSystem(Operations):
     # ==================
 
     def access(self, path, mode):
-        if path == '/actual_context':
+        if path in ['/actual_context', localization_directory, event_directory]:
             return
         elif path.startswith('/actual_context/'):
             if path[16:] in self.data_source.map:
@@ -112,18 +112,16 @@ class VirtualFileSystem(Operations):
 
     def getattr(self, path, fh=None):
         st = None
-        virtual_file_or_dir = False
         full_path = self._full_path(path)
 
         if (path in ['/', '/actual_context', localization_directory, event_directory]
                 or self.localization_pattern.match(path)
                 or self.event_pattern.match(path)):
-            virtual_file_or_dir = True
             st = os.stat_result((
                 16877, # Mode (permissions)
                 None, # The inode number
-                2023, # st_dev (device identifier /dev/*)
-                3, # st_nlink (number of hard links)
+                None, # st_dev (device identifier /dev/*)
+                0, # st_nlink (number of hard links)
                 os.geteuid(), # st_uid (user ID of the file owner, always the current user)
                 os.getegid(), # st_gid (group ID of the file owner, always the related to current user)
                 4096, # st_size (file size in Bytes)
@@ -160,8 +158,6 @@ class VirtualFileSystem(Operations):
             dirents.append('actual_context')
             dirents.append('localization')
             dirents.append('event')
-            # print(self.data_source.get_events())
-            # print(self.data_source.get_localizations())
 
         elif(path == '/actual_context'):
             self.data_source.update_file_map( self.data_source.get_files() )
@@ -169,7 +165,6 @@ class VirtualFileSystem(Operations):
                 dirents.append(relative_path)
 
         elif(path == localization_directory): # What are the existent localizations ?
-            print("Quais localizações existem ?")
             self.data_source.update_localization_map( self.data_source.get_localizations() )
             for pretty_name in self.data_source.localization_map:
                 dirents.append(pretty_name)
