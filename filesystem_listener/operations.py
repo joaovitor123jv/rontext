@@ -43,9 +43,11 @@ def store_events(events):
 
 
 def call_ics_plugin(file):
+    # print("PARSING ICS FILE:  ", file)
     return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
     parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
     store_events(parsed_return)
+    print("FILE PARSED")
 
 def get_relationships(file_id):
     event_summary = None
@@ -93,7 +95,7 @@ def handle_access(path, filename):
     file = path + '/' + filename
 
     if os.path.isfile(file):
-        print("Arquivo aberto == ", file)
+        # print("Arquivo aberto == ", file)
         file_id = database.store_file(file, 1)
         database.increase_file_hits(file)
         relationships = get_relationships(file_id)
@@ -104,6 +106,7 @@ def handle_file_created(path, filename):
     file = path + '/' + filename
 
     if filename.endswith('.ics'):
+        # print("ICS File detected")
         call_ics_plugin(file)
 
     elif file == (settings.loaded['database'] + '-journal'):

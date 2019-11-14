@@ -36,7 +36,7 @@ def get_actual_localization():
 def get_mock_time():
     with open(settings.loaded['mock_time_localization'], "r") as stream:
         try:
-            data = yaml.load(stream)
+            data = yaml.load(stream, Loader=yaml.FullLoader)
             # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
             if data == None:
                 print("ERRO!!!!: DATA ATUAL == NONE")
@@ -66,14 +66,14 @@ def get_actual_event():
     else:
         actual_time = datetime.datetime.now()
 
-    print("Actual Time == ", actual_time)
+    # print("Actual Time == ", actual_time)
 
     stored_events = database.get_events()
 
     for stored_event in stored_events:
         if get_date_from_event(stored_event[2], settings.loaded['event_dates_in_utc']) <= actual_time: # if the start_event time was before
             if get_date_from_event(stored_event[0], settings.loaded['event_dates_in_utc']) >= actual_time: # if the end_event still not done
-                print("IN EVENT: ", stored_event[1]) # Show event summary
+                # print("IN EVENT: ", stored_event[1]) # Show event summary
                 return stored_event # returns the found event
 
 

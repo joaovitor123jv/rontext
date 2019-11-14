@@ -27,7 +27,7 @@ def already_in_database(localization):
     return False
 
 def listener():
-    print("**** SIDE_THREAD ID == ", threading.get_ident())
+    # print("**** SIDE_THREAD ID == ", threading.get_ident())
     while True:
         return_data = subprocess.run([settings.loaded['localization_bin']], stdout=subprocess.PIPE)
         parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))

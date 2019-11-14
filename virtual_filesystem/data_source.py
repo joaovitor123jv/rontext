@@ -1,6 +1,6 @@
 import sqlite3
 from settings import Settings
-from helpers import get_date_from_event
+from helpers import get_date_from_event, has_duplicates, get_duplicates
 import datetime
 import time
 import yaml
@@ -30,10 +30,23 @@ class DataSource:
 
     def update_file_map(self, full_paths):
         self.map = {}
+        duplicates = None
+        if has_duplicates(full_paths):
+            duplicates = get_duplicates(full_paths)
+
         for full_path in full_paths:
-            keys = str(full_path[0]).split("/")
-            last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
-            self.map[last_key] = str(full_path[0]) # Stores an 'object' with the filename as key and full_path as value
+            full_path_str = str(full_path[0])
+            if duplicates != None:
+                if full_path_str in duplicates:
+                    self.map[full_path_str.replace('/', '|')] = full_path_str
+                else:
+                    keys = full_path_str.split("/")
+                    last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
+                    self.map[last_key] = full_path_str # Stores an 'object' with the filename as key and full_path as value
+            else:
+                keys = full_path_str.split("/")
+                last_key = keys[len(keys) - 1] # Separate file name "/home/user/Documents/test" -> "test"
+                self.map[last_key] = full_path_str # Stores an 'object' with the filename as key and full_path as value
 
     def update_localization_map(self, full_localizations):
         self.localization_map = {}
@@ -144,7 +157,7 @@ class DataSource:
         # print(f"Event summary == {event_summary}")
 
         cursor = self.connection.cursor()
-        max_results = 10
+        max_results = 20
 
         if localization != None and event_summary != None:
             cursor.execute("""
@@ -154,7 +167,8 @@ class DataSource:
                     WHERE localization_id=?
                         AND event_summary=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (localization, event_summary, max_results))
 
@@ -165,7 +179,9 @@ class DataSource:
                     INNER JOIN files AS f
                     WHERE localization_id=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                        AND event_summary='NULL'
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (localization, max_results))
 
@@ -176,7 +192,8 @@ class DataSource:
                     INNER JOIN files AS f
                     WHERE event_summary=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (event_summary, max_results))
 
@@ -186,7 +203,9 @@ class DataSource:
                     FROM relations AS r
                     INNER JOIN files AS f
                     WHERE f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                        AND event_summary='NULL'
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (max_results,))
 
@@ -194,7 +213,7 @@ class DataSource:
 
     def get_files_by(self, type_key, item_key):
         cursor = self.connection.cursor()
-        max_results = 10
+        max_results = 20
 
         if type_key == 'localization':
             if self.localization_map == {}:
@@ -207,7 +226,8 @@ class DataSource:
                     INNER JOIN files AS f
                     WHERE localization_id=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (localization, max_results))
             return cursor.fetchall()
@@ -223,7 +243,8 @@ class DataSource:
                     INNER JOIN files AS f
                     WHERE event_summary=?
                         AND f.idfiles=r.file_id
-                    ORDER BY r.hits DESC
+                    ORDER BY r.hits DESC,
+                        f.idfiles DESC
                     LIMIT 0, ?;
                     """, (item_key, max_results))
             return cursor.fetchall()

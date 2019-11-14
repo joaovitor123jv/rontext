@@ -148,7 +148,7 @@ def store_file(path, hits=1):
             elif path == '/home/joaovitor/experimentos/dados/END':
                 print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
                 exit(0)
-            print(f"Arquivo '{path}' no banco")
+            # print(f"Arquivo '{path}' no banco")
 
         return response[0]
 
@@ -214,7 +214,6 @@ def update_relationship(relation_data, cursor):
     cursor.execute("UPDATE relations SET hits=hits+1, last_access=? WHERE idrelations=?", (datetime.datetime.now(), relation_data[0][0]))
     get_connection().commit()
 
-# TODO: Armazenar as relações
 def store_relationship(relationship):
     # print("Relationship === ", relationship)
     if is_connected():

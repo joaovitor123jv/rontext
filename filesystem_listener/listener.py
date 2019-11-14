@@ -2,10 +2,14 @@ import inotify.adapters
 import operations
 import settings
 
+import time
+
+inicio = None
+
 def listen():
     listener = None
     if settings.loaded['recursive_listening']:
-        print("LOG: Enabling recursive listening in ", settings.loaded['listen'][0])
+        # print("LOG: Enabling recursive listening in ", settings.loaded['listen'][0])
         try:
             listener = inotify.adapters.InotifyTree(settings.loaded['listen'][0])
             print("LOG: listener created")
@@ -15,7 +19,7 @@ def listen():
     else:
         listener = inotify.adapters.Inotify()
         for path in settings.loaded['listen']:
-            print("Adding '", path, "' to listener")
+            # print("Adding '", path, "' to listener")
             listener.add_watch(path)
 
     if settings.loaded['ignore_hidden']:
@@ -38,6 +42,13 @@ def listenOnlyVisible(listener):
 def listenAll(listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
+        if filename == 'START':
+            inicio = time.time()
+        elif filename == 'END':
+            fim = time.time()
+            print(f"Demorou: {fim - inicio} para indexar tudo")
+            exit(0)
+
         if operations.created_something(type_names, path):
             operations.handle_file_created(path, filename)
         elif operations.deleted_something(type_names, path):

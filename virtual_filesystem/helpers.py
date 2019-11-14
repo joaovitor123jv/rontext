@@ -33,3 +33,24 @@ def get_path_info(path):
         'parent_directory': keys[divisions - 2],
         'divisions': divisions
     }
+
+def has_duplicates(list):
+    set_of_elements = set()
+    for element in list:
+        file_name = get_file_name(element[0])
+        if file_name in set_of_elements:
+            return True
+        else:
+            set_of_elements.add(file_name)
+    return False
+
+def get_duplicates(list):
+    set_of_duplicates = set()
+    set_of_elements = set()
+    for element in list:
+        file_name = get_file_name(element[0])
+        if file_name in set_of_elements:
+            set_of_duplicates.add(element[0])
+        else:
+            set_of_elements.add(file_name)
+    return [*set_of_duplicates,]
