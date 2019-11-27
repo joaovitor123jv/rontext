@@ -1,6 +1,7 @@
 import inotify.adapters
 import operations
 import settings
+import database
 
 import time
 
@@ -22,39 +23,31 @@ def listen():
             # print("Adding '", path, "' to listener")
             listener.add_watch(path)
 
+    connection = database.connect()
     if settings.loaded['ignore_hidden']:
-        listenOnlyVisible(listener)
+        listenOnlyVisible(connection, listener)
 
     else:
-        listenAll(listener)
+        listenAll(connection, listener)
 
-def listenOnlyVisible(listener):
+def listenOnlyVisible(connection, listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
         if not filename.startswith('.'):
             if operations.created_something(type_names, path):
-                operations.handle_file_created(path, filename)
+                operations.handle_file_created(connection, path, filename)
             elif operations.deleted_something(type_names, path):
-                operations.handle_file_deleted(path, filename)
+                operations.handle_file_deleted(connection, path, filename)
             elif operations.accessed_something(type_names, path):
-                operations.handle_access(path, filename)
+                operations.handle_access(connection, path, filename)
 
-def listenAll(listener):
+def listenAll(connection, listener):
     for event in listener.event_gen(yield_nones = False):
         (_, type_names, path, filename) = event
-        if filename == 'START':
-            inicio = time.time()
-        elif filename == 'END':
-            fim = time.time()
-            print(f"Demorou: {fim - inicio} para indexar tudo")
-            exit(0)
-
         if operations.created_something(type_names, path):
-            operations.handle_file_created(path, filename)
+            operations.handle_file_created(connection, path, filename)
         elif operations.deleted_something(type_names, path):
-            operations.handle_file_deleted(path, filename)
+            operations.handle_file_deleted(connection, path, filename)
         elif operations.accessed_something(type_names, path):
-            operations.handle_access(path, filename)
-        # else:
-        #     print("Event type: ", type_names)
-        #     print("Filename: ", filename)
+            operations.handle_access(connection, path, filename)
+

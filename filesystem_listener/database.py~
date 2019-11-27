@@ -23,27 +23,16 @@ def is_database_ready(connection):
     # else:
     #     return True
 
-def notify_database_update(connection, cursor):
-    print("Starting notification")
-    if ('waiting_commit' in settings.runtime
-        and settings.runtime['waiting_commit'] == True):
-        print("First IF PASS")
+def notify_database_update(connection):
+    if settings.runtime['waiting_commit'] == True:
         if (time.time() - settings.runtime['time_notified']) > 1:
-            print("Elapsed time since last notification == ", time.time() - settings.runtime['time_notified'])
-            print("Time now: ", time.time())
-            print("Last Time notified: ", settings.runtime['time_notified'])
             print("Starting commit!")
-            inicio = time.time()
-            connection.commit()
-            tempo = time.time() - inicio
-            print("ELAPSED COMMIT TIME = ", tempo)
-            print("FINISHED COMMIT")
-
-        settings.add_runtime('time_notified', time.time())
+            connection.cursor().commit()
+        else:
+            settings.add_runtime('time_notified', time.time())
     else:
-        print("Beginning transaction")
-        cursor.execute('BEGIN');
-        settings.add_runtime('waiting_commit', True)
+        connection.cursor().execute('BEGIN');
+        settings.add_runtime('waiting_commig', True)
         settings.add_runtime('time_notified', time.time())
 
 def setup_schema():
@@ -100,7 +89,6 @@ def setup_schema():
 
 def store_events(connection, events):
     cursor = connection.cursor()
-    notify_database_update(connection, cursor)
     cursor.executemany("INSERT INTO events (summary, start_time, end_time) VALUES (?, ?, ?)", events)
     # connection.commit()
 
@@ -113,7 +101,6 @@ def get_events(connection):
 def store_file(connection, path, hits=1):
     print("Inserindo arquivo com nome: ", path)
     cursor = connection.cursor()
-    notify_database_update(connection, cursor)
     cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
     response = cursor.fetchone()
 
@@ -127,14 +114,13 @@ def store_file(connection, path, hits=1):
             settings.add_runtime('start_timestamp', time.time())
         elif path == '/home/joaovitor/experimentos/dados/END':
             print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
-            # exit(0)
+            exit(0)
         # print(f"Arquivo '{path}' no banco")
 
     return response[0]
 
 def increase_file_hits(connection, path):
     cursor = connection.cursor()
-    notify_database_update(connection, cursor)
     cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
     # connection.commit()
     # print(f"Hits do arquivo '{path}' atualizado no banco de dados")
@@ -143,7 +129,6 @@ def increase_file_hits(connection, path):
 # Remove o registro do arquivo na tabela de arquivos, se arquivo tiver sido armazenado anteriormente
 def delete_file_reference(connection, path):
     cursor = connection.cursor()
-    notify_database_update(connection, cursor)
     cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
 
     if cursor.fetchall() != None:
@@ -162,7 +147,6 @@ def store_localization(connection, localization):
     # connection.commit()
 
 def insert_relationship(connection, relationship, cursor):
-    notify_database_update(connection, cursor)
     if settings.loaded['use_agenda']:
         if settings.loaded['use_localization']:
             cursor.execute("INSERT INTO relations (file_id, localization_id, event_summary, last_access, hits) VALUES (?, ?, ?, ?, 1)", (
@@ -182,14 +166,12 @@ def insert_relationship(connection, relationship, cursor):
     # connection.commit()
 
 def update_relationship(connection, relation_data, cursor):
-    notify_database_update(connection, cursor)
     cursor.execute("UPDATE relations SET hits=hits+1, last_access=? WHERE idrelations=?", (datetime.datetime.now(), relation_data[0][0]))
     # connection.commit()
 
 def store_relationship(connection, relationship):
     # print("Relationship === ", relationship)
     cursor = connection.cursor()
-    notify_database_update(connection, cursor)
 
     relation_data = None
     query = None

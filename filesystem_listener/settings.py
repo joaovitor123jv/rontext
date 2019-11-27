@@ -22,6 +22,7 @@ def init():
             # Ignore all specified directories or files which contains defined substrings
             # If empty, listen all.
             # 'node_modules'
+            '/.git/'
         ],
         # 'recursive_listening': True,
         'ignore_hidden': True,
@@ -29,8 +30,10 @@ def init():
         'use_time_mock': False,
         'localization_plugin_wait_time': 1, # Time, in seconds
         'localization_precision': 0.01, # Worst precision than the Mock, reduce the amount of stored localizations
-        'localization_bin': os.environ['HOME'] + "/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py",
-        'ics_parser_bin': os.environ['HOME'] + "/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
+        # 'localization_bin': os.environ['HOME'] + "/Documentos/UFG-CDC/PFC/PFC2/Sistema/localization/main.py",
+        'localization_bin': os.path.dirname(os.path.abspath(__file__)) + '/../localization/main.py',
+        'ics_parser_bin': os.path.dirname(os.path.abspath(__file__)) + '/../ics_parser/main.rb',
+        # 'ics_parser_bin': os.environ['HOME'] + "/Documentos/UFG-CDC/PFC/PFC2/Sistema/ics_parser/main.rb",
         'use_agenda': True,
         'database': os.environ['HOME'] + "/.ctxt_search-database.db",
         'mountpoint': os.environ['HOME'] + "/Rontext/",
@@ -40,3 +43,6 @@ def init():
 def add_runtime(name, data):
     global runtime
     runtime[name] = data
+
+def set(name, data):
+    add_runtime(name, data)

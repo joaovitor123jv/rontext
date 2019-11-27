@@ -29,49 +29,51 @@ def accessed_something(type_names, path):
 def deleted_something(type_names, path):
     return True if (type_names[0] in ["IN_MOVED_FROM", "IN_DELETE"]) and not shouldIgnore(path) else False
 
-def store_events(events):
+def store_events(connection, events):
     if events != None:
         normalized_events = []
         for event in events:
-            start_time = time_parser.convert_to_python_datetime(event[':start'])
-            end_time = time_parser.convert_to_python_datetime(event[':end'])
-            summary = event[':summary']
+            normalized_events.append(( 
+                time_parser.convert_to_python_datetime(event[':start']),
+                time_parser.convert_to_python_datetime(event[':end']),
+                event[':summary']
+            ))
 
-            normalized_events.append(( start_time, end_time, summary ))
-
-        database.store_events(normalized_events)
+            database.store_events(connection, normalized_events)
 
 
-def call_ics_plugin(file):
-    # print("PARSING ICS FILE:  ", file)
+def call_ics_plugin(connection, file):
+    print("PARSING ICS FILE:  ", file)
     return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
     parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
-    store_events(parsed_return)
+    store_events(connection, parsed_return)
     print("FILE PARSED")
 
-def get_relationships(file_id):
+def get_relationships(connection, file_id):
     event_summary = None
     event = None
     relationships = None
 
     if settings.loaded['use_agenda']:
-        event = helpers.get_actual_event()
+        event = helpers.get_actual_event(connection)
 
-    if event != None:
-        event_summary = event[1]
-    else:
-        event_summary = "NULL"
+
+    event = event[1] if event != None else "NULL"
+    # if event != None:
+    #     event_summary = event[1]
+    # else:
+    #     event_summary = "NULL"
 
     if settings.loaded['use_localization'] and settings.loaded['use_agenda']:
         relationships = {
             'file_id': file_id,
-            'localization_id': helpers.get_actual_localization(),
+            'localization_id': helpers.get_actual_localization(connection),
             'event_summary': event_summary
         }
     elif settings.loaded['use_localization']:
         relationships = {
             'file_id': file_id,
-            'localization_id': helpers.get_actual_localization(),
+            'localization_id': helpers.get_actual_localization(connection),
             'event_summary': None
         }
 
@@ -91,34 +93,34 @@ def get_relationships(file_id):
 
     return relationships
 
-def handle_access(path, filename):
+def handle_access(connection, path, filename):
     file = path + '/' + filename
 
     if os.path.isfile(file):
         # print("Arquivo aberto == ", file)
-        file_id = database.store_file(file, 1)
-        database.increase_file_hits(file)
-        relationships = get_relationships(file_id)
-        database.store_relationship(relationships)
+        file_id = database.store_file(connection, file, 1)
+        database.increase_file_hits(connection, file)
+        relationships = get_relationships(connection, file_id)
+        database.store_relationship(connection, relationships)
 
 
-def handle_file_created(path, filename):
+def handle_file_created(connection, path, filename):
     file = path + '/' + filename
 
     if filename.endswith('.ics'):
         # print("ICS File detected")
-        call_ics_plugin(file)
+        call_ics_plugin(connection, file)
 
     elif file == (settings.loaded['database'] + '-journal'):
         return
 
     else:
-        file_id = database.store_file(file, 1)
-        relationships = get_relationships(file_id)
-        database.store_relationship(relationships)
+        file_id = database.store_file(connection, file, 1)
+        relationships = get_relationships(connection, file_id)
+        database.store_relationship(connection, relationships)
 
 
-def handle_file_deleted(path, filename):
+def handle_file_deleted(connection, path, filename):
     file = path + '/' + filename
 
     if(filename.endswith('.ics')):
@@ -130,4 +132,4 @@ def handle_file_deleted(path, filename):
 
     else:
         # print("Deleted file ", file)
-        database.delete_file_reference(file)
+        database.delete_file_reference(connection, file)
