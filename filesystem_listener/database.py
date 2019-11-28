@@ -1,60 +1,126 @@
 import sqlite3
 import settings
 import datetime
+import helpers
+import queue
 import time
 
 import threading
+
 
 def connect():
     print("Connecting")
     return sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
 
-def is_database_ready(connection):
-    cursor = connection.cursor()
-
+def is_database_ready(cursor):
     cursor.execute("""
         SELECT name FROM sqlite_master WHERE type='table' AND name='files';
     """)
 
     return False if (cursor.fetchone() == None) else True
 
-    # if cursor.fetchone() == None:
-    #     return False
-    # else:
-    #     return True
+def get_relationship(cursor, file_id):
+    event_summary = None
+    event = None
+    relationship = None
 
-def notify_database_update(connection, cursor):
-    print("Starting notification")
-    if ('waiting_commit' in settings.runtime
-        and settings.runtime['waiting_commit'] == True):
-        print("First IF PASS")
-        if (time.time() - settings.runtime['time_notified']) > 1:
-            print("Elapsed time since last notification == ", time.time() - settings.runtime['time_notified'])
-            print("Time now: ", time.time())
-            print("Last Time notified: ", settings.runtime['time_notified'])
-            print("Starting commit!")
-            inicio = time.time()
-            connection.commit()
-            tempo = time.time() - inicio
-            print("ELAPSED COMMIT TIME = ", tempo)
-            print("FINISHED COMMIT")
+    if settings.loaded['use_agenda']:
+        event = helpers.get_actual_event(cursor)
 
-        settings.add_runtime('time_notified', time.time())
+    event_summary = event[1] if event != None else "NULL"
+
+    if settings.loaded['use_localization'] and settings.loaded['use_agenda']:
+        relationship = {
+            'file_id': file_id,
+            'localization_id': helpers.get_actual_localization(cursor),
+            'event_summary': event_summary
+        }
+    elif settings.loaded['use_localization']:
+        relationship = {
+            'file_id': file_id,
+            'localization_id': helpers.get_actual_localization(cursor),
+            'event_summary': None
+        }
+
+    elif settings.loaded['use_agenda']:
+        relationship = {
+            'file_id': file_id,
+            'localization_id': None,
+            'event_summary': event_summary
+        }
+
     else:
-        print("Beginning transaction")
-        cursor.execute('BEGIN');
-        settings.add_runtime('waiting_commit', True)
-        settings.add_runtime('time_notified', time.time())
+        relationship = {
+            'file_id': file_id,
+            'localization_id': None,
+            'event_summary': None
+        }
+
+    return relationship
+
+
+def insert_path(cursor, path):
+    cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
+    response = cursor.fetchone()
+
+    if response == [] or response == None:
+        cursor.execute("INSERT INTO files (path, hits) VALUES (?, ?)", (path, 1))
+        cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
+        response = cursor.fetchone()
+    else:
+        cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
+
+    relationship = get_relationship(cursor, response[0])
+    store_relationship(cursor, relationship)
+
+def insert_queue_items(connection, cursor, path=None):
+    if path != None:
+        insert_path(cursor, path)
+        while True:
+            try:
+                next_path = settings.runtime['insert_queue'].get_nowait()
+                insert_path(cursor, next_path)
+            except queue.Empty:
+                return
+
+        # if path == '/home/joaovitor/experimentos/dados/START':
+        #     print("Starting time monitoring")
+        #     settings.add_runtime('start_timestamp', time.time())
+        # elif path == '/home/joaovitor/experimentos/dados/END':
+        #     print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
+
+def file_insert_handler():
+    connection = connect()
+    cursor = connection.cursor()
+    settings.add_runtime('insert_queue', queue.Queue())
+
+    while True:
+        print("Waiting input")
+        time.sleep(1)
+        try:
+            path = settings.runtime['insert_queue'].get()
+            print("== Beginning transaction")
+            cursor.execute('BEGIN');
+            insert_queue_items(connection, cursor, path)
+            print("== Commiting alterations")
+            connection.commit()
+            end = time.time()
+            print("== DONE")
+            if 'start_timestamp' in settings.runtime:
+                print("=======================")
+                print("Elapsed time: ", end-settings.runtime['start_timestamp'])
+                print("=======================")
+        except queue.Empty:
+            pass
 
 def setup_schema():
     connection = connect()
-    if is_database_ready(connection):
+    cursor = connection.cursor()
+    if is_database_ready(cursor):
         print("Table already created")
         connection.close()
         return True
     else:
-        cursor = connection.cursor()
-
         cursor.execute("""
             CREATE TABLE files (
                 idfiles     INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -98,71 +164,32 @@ def setup_schema():
         connection.close()
         print("Table successfully created")
 
-def store_events(connection, events):
-    cursor = connection.cursor()
-    notify_database_update(connection, cursor)
+def store_events(cursor, events):
     cursor.executemany("INSERT INTO events (summary, start_time, end_time) VALUES (?, ?, ?)", events)
-    # connection.commit()
 
-def get_events(connection):
-    cursor = connection.cursor()
+def get_events(cursor):
     cursor.execute("SELECT start_time, end_time, summary FROM events")
     return cursor.fetchall()
 
 # Cria um registro do arquivo na tabela de arquivos, se arquivo já não tiver sido armazenado anteriormente
-def store_file(connection, path, hits=1):
-    print("Inserindo arquivo com nome: ", path)
-    cursor = connection.cursor()
-    notify_database_update(connection, cursor)
-    cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
-    response = cursor.fetchone()
-
-    if response == [] or response == None:
-        cursor.execute("INSERT INTO files (path, hits) VALUES (?, ?)", (path, hits))
-        # connection.commit()
-        cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
-        response = cursor.fetchone()
-        if path == '/home/joaovitor/experimentos/dados/START':
-            print("Starting time monitoring")
-            settings.add_runtime('start_timestamp', time.time())
-        elif path == '/home/joaovitor/experimentos/dados/END':
-            print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
-            # exit(0)
-        # print(f"Arquivo '{path}' no banco")
-
-    return response[0]
-
-def increase_file_hits(connection, path):
-    cursor = connection.cursor()
-    notify_database_update(connection, cursor)
-    cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
-    # connection.commit()
-    # print(f"Hits do arquivo '{path}' atualizado no banco de dados")
+def store_file(path): #, hits=1):
+    settings.runtime['insert_queue'].put(path)
 
 
 # Remove o registro do arquivo na tabela de arquivos, se arquivo tiver sido armazenado anteriormente
-def delete_file_reference(connection, path):
-    cursor = connection.cursor()
-    notify_database_update(connection, cursor)
+def delete_file_reference(cursor, path):
     cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
-
     if cursor.fetchall() != None:
         cursor.execute("DELETE FROM files WHERE path=?", (path,))
-        # connection.commit()
-        # print(f"Registro de arquivo '{path}' removido do banco de dados")
 
-def get_localizations(connection):
-    cursor = connection.cursor()
+def get_localizations(cursor):
     cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
     return cursor.fetchall()
 
-def store_localization(connection, localization):
-    cursor = connection.cursor()
+def store_localization(cursor, localization):
     cursor.execute("INSERT INTO localizations (latitude, longitude) VALUES (?, ?)", (localization['latitude'], localization['longitude']))
-    # connection.commit()
 
-def insert_relationship(connection, relationship, cursor):
-    notify_database_update(connection, cursor)
+def insert_relationship(relationship, cursor):
     if settings.loaded['use_agenda']:
         if settings.loaded['use_localization']:
             cursor.execute("INSERT INTO relations (file_id, localization_id, event_summary, last_access, hits) VALUES (?, ?, ?, ?, 1)", (
@@ -179,18 +206,11 @@ def insert_relationship(connection, relationship, cursor):
             ))
         else:
             return False
-    # connection.commit()
 
-def update_relationship(connection, relation_data, cursor):
-    notify_database_update(connection, cursor)
+def update_relationship(relation_data, cursor):
     cursor.execute("UPDATE relations SET hits=hits+1, last_access=? WHERE idrelations=?", (datetime.datetime.now(), relation_data[0][0]))
-    # connection.commit()
 
-def store_relationship(connection, relationship):
-    # print("Relationship === ", relationship)
-    cursor = connection.cursor()
-    notify_database_update(connection, cursor)
-
+def store_relationship(cursor, relationship):
     relation_data = None
     query = None
 
@@ -216,21 +236,15 @@ def store_relationship(connection, relationship):
             """, (relationship['file_id'], relationship['localization_id']))
 
         else:
-            # print("No context data supplied, no relations can be found")
             return False
 
 
     relation_data = cursor.fetchall()
 
-    # print(" RELATION_DATA === ", relation_data)
-
     if relation_data != []:
-        # print("Found relationship in database, updating values")
-        update_relationship(connection, relation_data, cursor)
-
+        update_relationship(relation_data, cursor)
     else:
-        # print("Can't found this relationship in database, inserting a new one")
-        insert_relationship(connection, relationship, cursor)
+        insert_relationship(relationship, cursor)
 
 
 

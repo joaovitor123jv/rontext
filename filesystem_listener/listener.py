@@ -39,7 +39,7 @@ def listenOnlyVisible(connection, listener):
             elif operations.deleted_something(type_names, path):
                 operations.handle_file_deleted(connection, path, filename)
             elif operations.accessed_something(type_names, path):
-                operations.handle_access(connection, path, filename)
+                operations.handle_access(path, filename)
 
 def listenAll(connection, listener):
     for event in listener.event_gen(yield_nones = False):
@@ -49,5 +49,5 @@ def listenAll(connection, listener):
         elif operations.deleted_something(type_names, path):
             operations.handle_file_deleted(connection, path, filename)
         elif operations.accessed_something(type_names, path):
-            operations.handle_access(connection, path, filename)
+            operations.handle_access(path, filename)
 

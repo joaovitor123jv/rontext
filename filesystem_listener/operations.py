@@ -1,6 +1,7 @@
 import subprocess
 import settings
 import time_parser
+import time
 import database
 import helpers
 import os
@@ -46,62 +47,19 @@ def call_ics_plugin(connection, file):
     print("PARSING ICS FILE:  ", file)
     return_data = subprocess.run([settings.loaded['ics_parser_bin'], file], stdout=subprocess.PIPE)
     parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
-    store_events(connection, parsed_return)
+    with connection:
+        store_events(connection, parsed_return)
     print("FILE PARSED")
 
-def get_relationships(connection, file_id):
-    event_summary = None
-    event = None
-    relationships = None
-
-    if settings.loaded['use_agenda']:
-        event = helpers.get_actual_event(connection)
-
-
-    event = event[1] if event != None else "NULL"
-    # if event != None:
-    #     event_summary = event[1]
-    # else:
-    #     event_summary = "NULL"
-
-    if settings.loaded['use_localization'] and settings.loaded['use_agenda']:
-        relationships = {
-            'file_id': file_id,
-            'localization_id': helpers.get_actual_localization(connection),
-            'event_summary': event_summary
-        }
-    elif settings.loaded['use_localization']:
-        relationships = {
-            'file_id': file_id,
-            'localization_id': helpers.get_actual_localization(connection),
-            'event_summary': None
-        }
-
-    elif settings.loaded['use_agenda']:
-        relationships = {
-            'file_id': file_id,
-            'localization_id': None,
-            'event_summary': event_summary
-        }
-
-    else:
-        relationships = {
-            'file_id': file_id,
-            'localization_id': None,
-            'event_summary': None
-        }
-
-    return relationships
-
-def handle_access(connection, path, filename):
+def handle_access(path, filename):
     file = path + '/' + filename
 
+    if filename == 'START':
+        print("Starting time monitoring")
+        settings.add_runtime('start_timestamp', time.time())
+
     if os.path.isfile(file):
-        # print("Arquivo aberto == ", file)
-        file_id = database.store_file(connection, file, 1)
-        database.increase_file_hits(connection, file)
-        relationships = get_relationships(connection, file_id)
-        database.store_relationship(connection, relationships)
+        file_id = database.store_file(file)
 
 
 def handle_file_created(connection, path, filename):
@@ -115,9 +73,7 @@ def handle_file_created(connection, path, filename):
         return
 
     else:
-        file_id = database.store_file(connection, file, 1)
-        relationships = get_relationships(connection, file_id)
-        database.store_relationship(connection, relationships)
+        file_id = database.store_file(file)
 
 
 def handle_file_deleted(connection, path, filename):
@@ -132,4 +88,4 @@ def handle_file_deleted(connection, path, filename):
 
     else:
         # print("Deleted file ", file)
-        database.delete_file_reference(connection, file)
+        database.delete_file_reference(connection.cursor(), file)

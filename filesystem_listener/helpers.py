@@ -15,10 +15,10 @@ def point_inside_circle(point, circle):
     b = (point["longitude"] - circle["longitude"]) * (point["longitude"] - circle["longitude"])
     return ((a + b) < (precision * precision))
 
-def get_actual_localization(connection):
+def get_actual_localization(cursor):
     localization = settings.runtime['localization']
 
-    stored_localizations = database.get_localizations(connection)
+    stored_localizations = database.get_localizations(cursor)
 
     if stored_localizations != None:
         for stored_localization in stored_localizations:
@@ -57,7 +57,7 @@ def get_date_from_event(event_date, using_utc=False):
     else:
         return datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S')
 
-def get_actual_event(connection):
+def get_actual_event(cursor):
     actual_time = None
 
     if settings.loaded['use_time_mock']:
@@ -68,7 +68,7 @@ def get_actual_event(connection):
 
     # print("Actual Time == ", actual_time)
 
-    stored_events = database.get_events(connection)
+    stored_events = database.get_events(cursor)
 
     for stored_event in stored_events:
         if get_date_from_event(stored_event[2], settings.loaded['event_dates_in_utc']) <= actual_time: # if the start_event time was before

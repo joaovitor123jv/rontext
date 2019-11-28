@@ -13,6 +13,15 @@ import localization
 
 import threading
 
+def start_file_insert_handler():
+    try:
+        print("Starting file insert handler")
+        thread = threading.Thread(target=database.file_insert_handler)
+        thread.start()
+        print("File insert handler started")
+    except:
+        print("Failed to start file insert handler")
+
 def _main():
     print("**** MAIN_THREAD ID == ", threading.get_ident())
     loaded_settings = config_file_handler.parseConfigFile()
@@ -20,6 +29,8 @@ def _main():
     database.setup_schema()
     if loaded_settings['use_localization']:
         localization.start_plugin()
+
+    start_file_insert_handler()
 
     listener.listen()
 
