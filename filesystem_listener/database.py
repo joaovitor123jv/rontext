@@ -63,15 +63,20 @@ def insert_path(cursor, path):
     cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
     response = cursor.fetchone()
 
-    if response == [] or response == None:
-        cursor.execute("INSERT INTO files (path, hits) VALUES (?, ?)", (path, 1))
-        cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
-        response = cursor.fetchone()
-    else:
-        cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
+    try:
+        if response == [] or response == None:
+            cursor.execute("INSERT INTO files (path, hits) VALUES (?, ?)", (path, 1))
+            cursor.execute("SELECT idfiles, path FROM files WHERE path=?", (path,))
+            response = cursor.fetchone()
+        else:
+            cursor.execute("UPDATE files SET hits=hits+1 WHERE path=?;", (path,))
 
-    relationship = get_relationship(cursor, response[0])
-    store_relationship(cursor, relationship)
+        relationship = get_relationship(cursor, response[0])
+        store_relationship(cursor, relationship)
+    except:
+        time.sleep(1)
+        insert_path(cursor, path)
+
 
 def insert_queue_items(connection, cursor, path=None):
     if path != None:
