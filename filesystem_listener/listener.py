@@ -11,11 +11,11 @@ def listen():
     listener = None
     if settings.loaded['recursive_listening']:
         # print("LOG: Enabling recursive listening in ", settings.loaded['listen'][0])
-        try:
-            listener = inotify.adapters.InotifyTree(settings.loaded['listen'][0])
-            print("LOG: listener created")
-        except PermissionError:
-            print("FAILED to add one directory to listening")
+        # try:
+        listener = inotify.adapters.InotifyTree(settings.loaded['listen'][0])
+        print("LOG: listener created")
+        # except PermissionError:
+        #     print("FAILED to add one directory to listening")
 
     else:
         listener = inotify.adapters.Inotify()
