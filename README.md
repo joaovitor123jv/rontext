@@ -34,7 +34,7 @@ Install all the dependencies, one-by-one. Open some shell and run these commands
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-1. Clone the lastest stable (vX.X.0-stable) or beta (vX.X.X) version from https://github.com/joaovitor123jv/ctxtsearch-system
+1. Clone the lastest stable (vX.X.0-stable) or beta (vX.X.X) version from https://github.com/joaovitor123jv/rontext
 2. Install the dependencies (see Prerequisites)
 3. Open two shell instances in the project root
 4. Run `./filesystem_listener/main.py` in any of the instances
@@ -73,13 +73,13 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/joaovitor123jv/ctxtsearch-system/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/joaovitor123jv/rontext/tags). 
 
 ## Authors
 
 * **João Vitor** - *Initial work* - [joaovitor123jv](https://github.com/joaovitor123jv)
 
-See also the list of [contributors](https://github.com/joaovitor123jv/ctxtsearch-system/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/joaovitor123jv/rontext/contributors) who participated in this project.
 
 ## License
 
