@@ -37,7 +37,7 @@ These instructions will get you a copy of the project up and running on your loc
 1. Clone the lastest stable (vX.X.0-stable) or beta (vX.X.X) version from https://github.com/joaovitor123jv/ctxtsearch-system
 2. Install the dependencies (see Prerequisites)
 3. Open two shell instances in the project root
-4. Run `./filesystem\_listener/main.py` in any of the instances
+4. Run `./filesystem_listener/main.py` in any of the instances
 5. Stop the proccess pressing `ctrl+c` one or two times
 6. Explore the configurations in `$HOME/.ctxt_search-config.yml` and fix what you think is wrong for you.
 7. Again, run `./filesystem_listener/main.py`.
