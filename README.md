@@ -98,10 +98,10 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Added navigation through localizations
 * Implemented testing system
 * Added README.md
+* Add CONTIBUTING.md
 
 ### What I need to do:
 * Add LICENSE.md
-* Add CONTIBUTING.md
 * Remove `__pycache__` directories from git tracking
 * Add testing scripts
 * Add testing instructions
