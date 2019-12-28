@@ -1,55 +1,119 @@
-# Lista de tarefas a serem implementadas
+# Rontext
 
-### Correções implementadas:
-* Tipo de acesso, alterado de IN\_ACCESS para IN\_OPEN, identificando somente
-aberturas de arquivos
+A new way for find and navigate your files, purely based on context.
 
-* Implementei um método de checagem para o caminho do arquivo, para que o
-  usuário possa configurar o que deve ser removido dos seus resultados, já que
-  cada usuário pode ter um perfil de uso diferente, e o usuário comum nem
-  conhece git ou IDE. É possível que o tempo de inserção possa ser alterado por
-  isso, vou realizar um teste de inserção novamente e comparar com os
-  resultados dos testes já obtidos só por precaução.
+### Prerequisites
 
-1. Verificar a possibilidade de ter as pastas:
-    * uma por evento (implementado)
-    * uma por localização (implementado)
+What things you need to install the software and how to install them
 
-### O que ainda preciso fazer:
-2. Pensar na validação do sistema
-    * Validação e verificação de software
-    * Teste caixa preta
-    * Pensar em como vou escrever a validação (querys)
+*Warning:* This section was tested using Debian 10, Linux Mint 19.2 and elementary OS 5 only. 
+I do not recommend installing and running this software withouth any development skills.
 
-3. Experimentar 
+#### Easy way:
 
-4. Escrever o que falta da monografia
+After clonning the project, open the project directory in some shell and run `./install-dependencies.sh`
 
-5. Escrever e entregar para revisão
+#### The "understand it" way:
 
-6. Fazer os slides
-    * Escrever o que falta (uma lista do que preciso escrever ainda)
+Install all the dependencies, one-by-one. Open some shell and run these commands.
+
+```
+  sudo apt install -y ruby ri ruby-bundler ruby-dev python3-pip
+
+  sudo apt install -y make build-essential libssl-dev zlib1g-dev
+  sudo apt install -y libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+
+  sudo pip3 install pyyaml
+  sudo pip3 install inotify
+  sudo gem install icalendar
+```
+
+## Getting Started
+
+*Warning: The Rontext is actually under development, and is not recommended in this phase for non-developers.*
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+
+1. Clone the lastest stable (vX.X.0-stable) or beta (vX.X.X) version from https://github.com/joaovitor123jv/ctxtsearch-system
+2. Install the dependencies (see Prerequisites)
+3. Open two shell instances in the project root
+4. Run `./filesystem\_listener/main.py` in any of the instances
+5. Stop the proccess pressing `ctrl+c` one or two times
+6. Explore the configurations in `$HOME/.ctxt_search-config.yml` and fix what you think is wrong for you.
+7. Again, run `./filesystem_listener/main.py`.
+8. If any error appears, return to step 5.
+9. If all goes well, in the remaining shell instance, run `./virtual_filesystem/main.py`
+10. If no errors happened, you'll see a `$HOME/Rontext` directory with some directories in. Explore it ;-)
+
+### Installing
+
+Rontext actually has no way to install. It will be developed as the project grows.
+
+## Running the tests
+
+Coming soon
+
+### Break down into end to end tests
+
+Coming soon
+
+### And coding style tests
+
+Actually no coding style tests, but I want to add it.
+
+## Built With
+
+https://www.python.org/
+* [Python](https://www.python.org/) - The main scripting language
+* [Ruby](https://www.ruby-lang.org/) - Used to parse the calendar files
+* [SQLite3](https://www.sqlite.org/index.html) - The database used
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/joaovitor123jv/ctxtsearch-system/tags). 
+
+## Authors
+
+* **João Vitor** - *Initial work* - [joaovitor123jv](https://github.com/joaovitor123jv)
+
+See also the list of [contributors](https://github.com/joaovitor123jv/ctxtsearch-system/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 
-### Problemas identificados:
-* Durante a leitura de qualquer arquivo .mp3, o evento "OPEN", é identificado várias
-vezes, dependendo do player de música
-    * Lembrar de colocar como "ameaça à funcionalidade", deixar como trabalho futuro
+-----
 
-* Quando "ouvindo" recursivamente a partir de um diretório, todos os arquivos
-  podem disparar eventos, incluindo pacotes dentro de projetos node,
-  `./node_modules/`, arquivos que são re-lidos várias vezes por um servidor
-  (routes.rb, num servidor rails), alterações em diretórios `.git` e leituras
-  realizadas por IDE's e editores de texto para melhorar o autocomplete.  
+# TODO
 
-  Ao abrir dois projetos (um grande com `rails` e um pequeno com `react`) mais
-  de dois mil arquivos começaram a ser acessados muito rapidamente. O
-  `filesystem_listener` acabou sobrecarregado e algumas vezes ocorreu o erro de
-  banco de dados bloqueado.  
+### Already implemented:
+* Access type, changed from IN\_ACCESS to IN\_OPEN, to identify only file openings
+* Added partial file path checking directly in configuration file
+* Added navigation through events
+* Added navigation through localizations
+* Implemented testing system
+* Added README.md
 
-  Durante o tempo de inserção desses milhares de arquivos, literalmente, o
-  retorno do sistema foi muito lento, o dispositivo de armazenamento estava sobrecarregado.
-
-* O Listening recursivo não é suportado diretamente pelo kernel, a biblioteca
-  que estou utilizando provê uma abstração que simula essa funcionalidade
-  adicionando diretórios ao listener quando encontra novos diretórios.
+### What I need to do:
+* Add LICENSE.md
+* Add CONTIBUTING.md
+* Remove `__pycache__` directories from git tracking
+* Add testing scripts
+* Add testing instructions
+* Add "rename" localization function
+    - This will allow the user to personalize the localization name, to give it a meaning. Not only "localization 1"
+* Move the project to a closer system language (like C++)
+* Update running and install instructions
+* Fix crash after `file permission` on recursive listening mode
+* Daemonize the system (boot with the operating system)
+* Update running and install instructions
+* Integrate calendar files with the cloud, and get the events directly from google servers.
+* Add instalation instructions
+* Add translations to directories
+* Test, Test, Test!
+* Launch a stable release
