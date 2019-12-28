@@ -63,14 +63,13 @@ Actually no coding style tests, but I want to add it.
 
 ## Built With
 
-https://www.python.org/
 * [Python](https://www.python.org/) - The main scripting language
 * [Ruby](https://www.ruby-lang.org/) - Used to parse the calendar files
 * [SQLite3](https://www.sqlite.org/index.html) - The database used
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Versioning
 
