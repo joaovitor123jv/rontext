@@ -1,4 +1,4 @@
-    require 'socket'
+require 'socket'
 
 APPLICATION_KEY = "CTXTSEARCH"
 
@@ -11,9 +11,9 @@ class Server
     def listen
         loop do
             Thread.start(@server.accept) do |client|
-                puts "CLIENTE ACEITO"
+                puts "CLIENT CONNECTED"
                 if client.gets.chomp == APPLICATION_KEY
-                    puts "CHAVE CORRETA"
+                    puts "KEY ACCEPTED"
                     yield(client)
                 else
                     client.puts "ERROR, WRONG KEY"

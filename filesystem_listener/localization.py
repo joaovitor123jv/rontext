@@ -5,11 +5,13 @@ import settings
 import database
 import helpers
 
+
 def point_inside_circle(point, circle):
     a = (point["latitude"] - circle["latitude"]) * (point["latitude"] - circle["latitude"])
     b = (point["longitude"] - circle["longitude"]) * (point["longitude"] - circle["longitude"])
     precision = float(settings.loaded["localization_precision"])
     return (a + b) < (precision * precision)
+
 
 def already_in_database(cursor, localization):
     stored_localizations = database.get_localizations(cursor)
@@ -25,6 +27,7 @@ def already_in_database(cursor, localization):
                 return True
 
     return False
+
 
 def listener():
     # print("**** SIDE_THREAD ID == ", threading.get_ident())
@@ -47,6 +50,7 @@ def listener():
                 database.store_localization(cursor, settings.runtime['localization'])
 
         time.sleep(settings.loaded['localization_plugin_wait_time']) # Waits 1 second till the next localization check
+
 
 def start_plugin():
     try:

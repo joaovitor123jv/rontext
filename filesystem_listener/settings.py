@@ -1,5 +1,6 @@
 import os
 
+
 def init():
     global loaded
     loaded = {}
@@ -40,9 +41,11 @@ def init():
         'event_dates_in_utc': False
     }
 
+
 def add_runtime(name, data):
     global runtime
     runtime[name] = data
+
 
 def set(name, data):
     add_runtime(name, data)

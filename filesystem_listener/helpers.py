@@ -5,15 +5,18 @@ import database
 import datetime
 import time
 
+
 def parse_yaml_string(string):
     fd = StringIO(string) # Cria um 'arquivo' em memória
     return yaml.load(fd, Loader=yaml.Loader) # Faz o parse do yaml
+
 
 def point_inside_circle(point, circle):
     precision = float(settings.loaded["localization_precision"])
     a = (point["latitude"] - circle["latitude"]) * (point["latitude"] - circle["latitude"])
     b = (point["longitude"] - circle["longitude"]) * (point["longitude"] - circle["longitude"])
     return ((a + b) < (precision * precision))
+
 
 def get_actual_localization(cursor):
     localization = settings.runtime['localization']
@@ -33,6 +36,7 @@ def get_actual_localization(cursor):
 
     return False
 
+
 def get_mock_time():
     with open(settings.loaded['mock_time_localization'], "r") as stream:
         try:
@@ -49,6 +53,7 @@ def get_mock_time():
             print(exc)
             return None
 
+
 def get_date_from_event(event_date, using_utc=False):
     if using_utc:
         now_timestamp = time.time()
@@ -56,6 +61,7 @@ def get_date_from_event(event_date, using_utc=False):
         return (datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S') + offset)
     else:
         return datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M:%S')
+
 
 def get_actual_event(cursor):
     actual_time = None
@@ -75,6 +81,3 @@ def get_actual_event(cursor):
             if get_date_from_event(stored_event[0], settings.loaded['event_dates_in_utc']) >= actual_time: # if the end_event still not done
                 # print("IN EVENT: ", stored_event[1]) # Show event summary
                 return stored_event # returns the found event
-
-
-

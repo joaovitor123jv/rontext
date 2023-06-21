@@ -2,12 +2,13 @@
 
 import os
 import io
-import time
 import yaml
 
 import settings
 
+
 config_file_path = os.environ['HOME'] + "/.ctxt_search-localization_plugin.yml"
+
 
 def createDefaultConfigFile():
     settings.init()

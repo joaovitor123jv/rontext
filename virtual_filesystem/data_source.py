@@ -2,10 +2,8 @@ import sqlite3
 from settings import Settings
 from helpers import get_date_from_event, has_duplicates, get_duplicates
 import datetime
-import time
 import yaml
 
-import threading
 
 class DataSource:
     def __init__(self):
