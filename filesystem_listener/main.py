@@ -2,16 +2,14 @@
 
 # Made to run with Python 3.7.x
 
-import os
-import sys
 import config_file_handler
 
-import settings
 import database
 import listener
 import localization
 
 import threading
+
 
 def start_file_insert_handler():
     try:
@@ -21,6 +19,7 @@ def start_file_insert_handler():
         print("File insert handler started")
     except:
         print("Failed to start file insert handler")
+
 
 def _main():
     print("**** MAIN_THREAD ID == ", threading.get_ident())
@@ -34,11 +33,14 @@ def _main():
 
     listener.listen()
 
+
 def cleanup():
     exit(0)
 
+
 import atexit
 atexit.register(cleanup)
+
 
 if __name__ == '__main__':
     _main()

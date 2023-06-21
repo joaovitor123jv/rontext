@@ -13,6 +13,7 @@ def isProjectRelated(path):
         path.startswith( os.environ['HOME'] + "/.ctxt_search-")
     )
 
+
 def shouldIgnore(path):
     if isProjectRelated(path):
         return True
@@ -21,14 +22,18 @@ def shouldIgnore(path):
             return True
     return False
 
+
 def created_something(type_names, path):
     return True if (type_names[0] in ["IN_MOVED_TO", "IN_CREATE"]) and not shouldIgnore(path) else False
+
 
 def accessed_something(type_names, path):
     return True if (type_names[0] == "IN_OPEN") and not shouldIgnore(path) else False
 
+
 def deleted_something(type_names, path):
     return True if (type_names[0] in ["IN_MOVED_FROM", "IN_DELETE"]) and not shouldIgnore(path) else False
+
 
 def store_events(connection, events):
     if events != None:
@@ -51,6 +56,7 @@ def call_ics_plugin(connection, file):
         store_events(connection, parsed_return)
     print("FILE PARSED")
 
+
 def handle_access(path, filename):
     file = path + '/' + filename
 
@@ -59,6 +65,7 @@ def handle_access(path, filename):
         settings.add_runtime('start_timestamp', time.time())
 
     if os.path.isfile(file):
+        print("File accessed: ", filename)
         file_id = database.store_file(file)
 
 
@@ -73,6 +80,7 @@ def handle_file_created(connection, path, filename):
         return
 
     else:
+        print("File created: ", filename)
         file_id = database.store_file(file)
 
 
@@ -87,5 +95,5 @@ def handle_file_deleted(connection, path, filename):
         return
 
     else:
-        # print("Deleted file ", file)
+        print("File deleted: ", filename)
         database.delete_file_reference(connection.cursor(), file)

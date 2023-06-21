@@ -6,16 +6,11 @@
 from __future__ import with_statement
 
 import os
-import sys
 import errno
 
 from fuse import FUSE, FuseOSError, Operations
 
-import sqlite3
 import re
-import datetime
-import time
-import threading
 
 from settings import Settings
 from data_source import DataSource

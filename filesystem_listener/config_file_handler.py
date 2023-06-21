@@ -5,7 +5,9 @@ import yaml
 
 import settings
 
+
 config_file_path = os.environ['HOME'] + "/.ctxt_search-config.yml"
+
 
 def createDefaultConfigFile():
     settings.init()

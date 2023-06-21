@@ -12,12 +12,14 @@ def connect():
     print("Connecting")
     return sqlite3.connect(settings.loaded['database'], detect_types=sqlite3.PARSE_DECLTYPES)
 
+
 def is_database_ready(cursor):
     cursor.execute("""
         SELECT name FROM sqlite_master WHERE type='table' AND name='files';
     """)
 
     return False if (cursor.fetchone() == None) else True
+
 
 def get_relationship(cursor, file_id):
     event_summary = None
@@ -94,6 +96,7 @@ def insert_queue_items(connection, cursor, path=None):
         # elif path == '/home/joaovitor/experimentos/dados/END':
         #     print("Time elapsed == ", time.time() - settings.runtime['start_timestamp'])
 
+
 def file_insert_handler():
     connection = connect()
     cursor = connection.cursor()
@@ -104,19 +107,20 @@ def file_insert_handler():
         time.sleep(1)
         try:
             path = settings.runtime['insert_queue'].get()
-            print("== Beginning transaction")
+            # print("== Beginning transaction")
             cursor.execute('BEGIN');
             insert_queue_items(connection, cursor, path)
-            print("== Commiting alterations")
+            # print("== Commiting alterations")
             connection.commit()
             end = time.time()
-            print("== DONE")
+            # print("== DONE")
             if 'start_timestamp' in settings.runtime:
                 print("=======================")
                 print("Elapsed time: ", end-settings.runtime['start_timestamp'])
                 print("=======================")
         except queue.Empty:
             pass
+
 
 def setup_schema():
     connection = connect()
@@ -169,12 +173,15 @@ def setup_schema():
         connection.close()
         print("Table successfully created")
 
+
 def store_events(cursor, events):
     cursor.executemany("INSERT INTO events (summary, start_time, end_time) VALUES (?, ?, ?)", events)
+
 
 def get_events(cursor):
     cursor.execute("SELECT start_time, end_time, summary FROM events")
     return cursor.fetchall()
+
 
 # Cria um registro do arquivo na tabela de arquivos, se arquivo já não tiver sido armazenado anteriormente
 def store_file(path): #, hits=1):
@@ -187,12 +194,15 @@ def delete_file_reference(cursor, path):
     if cursor.fetchall() != None:
         cursor.execute("DELETE FROM files WHERE path=?", (path,))
 
+
 def get_localizations(cursor):
     cursor.execute("SELECT idlocalizations, latitude, longitude FROM localizations")
     return cursor.fetchall()
 
+
 def store_localization(cursor, localization):
     cursor.execute("INSERT INTO localizations (latitude, longitude) VALUES (?, ?)", (localization['latitude'], localization['longitude']))
+
 
 def insert_relationship(relationship, cursor):
     if settings.loaded['use_agenda']:
@@ -212,8 +222,10 @@ def insert_relationship(relationship, cursor):
         else:
             return False
 
+
 def update_relationship(relation_data, cursor):
     cursor.execute("UPDATE relations SET hits=hits+1, last_access=? WHERE idrelations=?", (datetime.datetime.now(), relation_data[0][0]))
+
 
 def store_relationship(cursor, relationship):
     relation_data = None
@@ -250,6 +262,3 @@ def store_relationship(cursor, relationship):
         update_relationship(relation_data, cursor)
     else:
         insert_relationship(relationship, cursor)
-
-
-

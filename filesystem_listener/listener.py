@@ -3,9 +3,9 @@ import operations
 import settings
 import database
 
-import time
 
 inicio = None
+
 
 def listen():
     listener = None
@@ -20,7 +20,7 @@ def listen():
     else:
         listener = inotify.adapters.Inotify()
         for path in settings.loaded['listen']:
-            # print("Adding '", path, "' to listener")
+            print("Adding '", path, "' to listener")
             listener.add_watch(path)
 
     connection = database.connect()
@@ -29,6 +29,7 @@ def listen():
 
     else:
         listenAll(connection, listener)
+
 
 def listenOnlyVisible(connection, listener):
     for event in listener.event_gen(yield_nones = False):
@@ -40,6 +41,7 @@ def listenOnlyVisible(connection, listener):
                 operations.handle_file_deleted(connection, path, filename)
             elif operations.accessed_something(type_names, path):
                 operations.handle_access(path, filename)
+
 
 def listenAll(connection, listener):
     for event in listener.event_gen(yield_nones = False):
