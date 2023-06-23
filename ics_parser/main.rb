@@ -2,7 +2,7 @@
 # coding: utf-8
 
 require 'icalendar'
-require 'yaml'
+require 'json'
 require_relative 'server.rb'
 
 arguments = ARGV
@@ -75,9 +75,9 @@ else
             end
         end
 
-        puts events.to_yaml
+        puts events.to_json
 
     else
-        puts ({ERROR: "File doesn't exists"}).to_yaml
+        puts ({ERROR: "File doesn't exists"}).to_json
     end
 end

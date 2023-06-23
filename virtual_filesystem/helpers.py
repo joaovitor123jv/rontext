@@ -1,5 +1,3 @@
-from io import StringIO
-import yaml
 import datetime
 import time
 
@@ -9,11 +7,6 @@ def point_inside_circle(point, circle, settings):
     b = (point["longitude"] - circle["longitude"]) * (point["longitude"] - circle["longitude"])
     precision = float(settings.loaded["localization_precision"])
     return (a + b) < (precision * precision)
-
-
-def parse_yaml_string(string):
-    fd = StringIO(string) # Create an 'in-memory' file
-    return yaml.load(fd, Loader=yaml.Loader) # Do the yaml parse
 
 
 def get_date_from_event(event_date, settings=None):

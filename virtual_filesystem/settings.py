@@ -1,20 +1,20 @@
 import os
-import yaml
+import json
 
 
 class Settings:
     def __init__(self):
         self.loaded = {}
         self.runtime = {}
-        self.config_file_path = os.environ['HOME'] + "/.ctxt_search-config.yml"
+        self.config_file_path = os.environ['HOME'] + "/.ctxt_search-config.json"
 
         if(os.path.isfile(self.config_file_path)):
             with open(self.config_file_path, "r") as stream:
                 try:
-                    self.loaded = yaml.load(stream, Loader=yaml.FullLoader)
+                    self.loaded = json.load(stream)
                     self.runtime = {}
 
-                except yaml.YAMLError as exc:
+                except json.JSONDecodeError as exc:
                     print(exc)
 
         else:

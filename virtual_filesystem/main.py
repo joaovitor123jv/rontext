@@ -6,6 +6,7 @@
 from __future__ import with_statement
 
 import os
+import sys
 import errno
 
 from fuse import FUSE, FuseOSError, Operations
@@ -19,7 +20,8 @@ from helpers import get_file_name, get_path_info
 
 localization_directory = "/localization"
 event_directory = "/event"
-
+cur_context_dir = "/actual_context"
+cur_context_len = len(cur_context_dir)
 
 class VirtualFileSystem(Operations):
     def __init__(self):
@@ -46,13 +48,13 @@ class VirtualFileSystem(Operations):
     # ==================
 
     def access(self, path, mode):
-        if (path in ['/actual_context', localization_directory, event_directory]
+        if (path in [cur_context_dir, localization_directory, event_directory]
                 or self.localization_pattern.match(path)
                 or self.event_pattern.match(path)):
             return
-        elif path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                if not os.access(self.data_source.map[path[16:]], mode):
+        elif path.startswith(cur_context_dir + '/'):
+            if path[cur_context_len + 1:] in self.data_source.map:
+                if not os.access(self.data_source.map[path[cur_context_len + 1:]], mode):
                     raise FuseOSError(errno.EACCES)
                 return
 
@@ -75,9 +77,9 @@ class VirtualFileSystem(Operations):
             raise FuseOSError(errno.EACCES)
 
     def chmod(self, path, mode):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.chmod(self.data_source.map[path[16:]], mode)
+        if path.startswith(cur_context_dir + '/'):
+            if path[cur_context_len + 1:] in self.data_source.map:
+                return os.chmod(self.data_source.map[path[cur_context_len + 1:]], mode)
         elif path.startswith(localization_directory):
             info = get_path_info(path)
             if info['divisions'] == 4:
@@ -91,9 +93,9 @@ class VirtualFileSystem(Operations):
         return os.chmod(self._full_path(path), mode)
 
     def chown(self, path, uid, gid):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.chown(self.data_source.map[path[16:]], uid, gid)
+        if path.startswith(cur_context_dir + '/'):
+            if path[cur_context_len + 1:] in self.data_source.map:
+                return os.chown(self.data_source.map[path[cur_context_len + 1:]], uid, gid)
         elif path.startswith(localization_directory):
             info = get_path_info(path)
             if info['divisions'] == 4:
@@ -111,7 +113,7 @@ class VirtualFileSystem(Operations):
         st = None
         full_path = self._full_path(path)
 
-        if (path in ['/', '/actual_context', localization_directory, event_directory]
+        if (path in ['/', cur_context_dir, localization_directory, event_directory]
                 or self.localization_pattern.match(path)
                 or self.event_pattern.match(path)):
             st = os.stat_result((
@@ -128,17 +130,17 @@ class VirtualFileSystem(Operations):
             ))
 
         else:
-            if path.startswith('/actual_context/'): # "/actual_context/file_name"  ->  "file_name"
-                if path[16:] in self.data_source.map:
-                    st = os.lstat(self.data_source.map[path[16:]])
+            if path.startswith(cur_context_dir + '/'): # "/actual_context/file_name"  ->  "file_name"
+                if path[cur_context_len + 1:] in self.data_source.map:
+                    st = os.lstat(self.data_source.map[path[cur_context_len + 1:]])
 
             elif path.startswith(localization_directory):
                 info = get_path_info(path)
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+                if info['file_name'] in self.data_source.file_by_localization_map.get(info['parent_directory'], []):
                     st = os.lstat(self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']])
             elif path.startswith(event_directory):
                 info = get_path_info(path)
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+                if info['file_name'] in self.data_source.file_by_event_map.get(info['parent_directory'], []):
                     st = os.lstat(self.data_source.file_by_event_map[info['parent_directory']][info['file_name']])
 
             if st == None:
@@ -156,7 +158,7 @@ class VirtualFileSystem(Operations):
             dirents.append('localization')
             dirents.append('event')
 
-        elif(path == '/actual_context'):
+        elif(path == cur_context_dir):
             self.data_source.update_file_map( self.data_source.get_files() )
             for relative_path in self.data_source.map:
                 dirents.append(relative_path)
@@ -188,7 +190,6 @@ class VirtualFileSystem(Operations):
             )
             for relative_path in self.data_source.file_by_event_map[event_key]:
                 dirents.append(relative_path)
-
         for dirent in dirents:
             if '/' in dirent:
                 dirent = dirent.replace('/', '|')
@@ -291,22 +292,24 @@ class VirtualFileSystem(Operations):
         return os.unlink(self._full_path(path))
 
     def symlink(self, name, target):
-        if path.startswith('/actual_context/'):
-            if path[16:] in self.data_source.map:
-                return os.symlink(name, self.data_source.map[path[16:]])
-        elif path.startswith(localization_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
-                    return os.symlink(name, self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']])
-        elif path.startswith(event_directory):
-            info = get_path_info(path)
-            if info['divisions'] == 4:
-                if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
-                    return os.symlink(name, self.data_source.file_by_event_map[info['parent_directory']][info['file_name']])
-        return os.symlink(name, self._full_path(target))
+        pass
+        # if path.startswith('/actual_context/'):
+        #     if path[16:] in self.data_source.map:
+        #         return os.symlink(name, self.data_source.map[path[16:]])
+        # elif path.startswith(localization_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_localization_map[info['parent_directory']]:
+        #             return os.symlink(name, self.data_source.file_by_localization_map[info['parent_directory']][info['file_name']])
+        # elif path.startswith(event_directory):
+        #     info = get_path_info(path)
+        #     if info['divisions'] == 4:
+        #         if info['file_name'] in self.data_source.file_by_event_map[info['parent_directory']]:
+        #             return os.symlink(name, self.data_source.file_by_event_map[info['parent_directory']][info['file_name']])
+        # return os.symlink(name, self._full_path(target))
 
     def rename(self, old, new):
+        print(f"Renaming {old = } to {new = }")
         pass
         # if path.startswith('/actual_context/'):
         #     if path[16:] in self.data_source.map:
