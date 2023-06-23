@@ -2,7 +2,7 @@ import sqlite3
 from settings import Settings
 from helpers import get_date_from_event, has_duplicates, get_duplicates
 import datetime
-import yaml
+import json
 
 
 class DataSource:
@@ -49,12 +49,7 @@ class DataSource:
     def update_localization_map(self, full_localizations):
         self.localization_map = {}
         for localization in full_localizations:
-            pretty_name = None
-            if localization[3] != None:
-                pretty_name = str(localization[3]) # Localization name
-            else:
-                pretty_name = str(localization[0]) # Localization ID
-
+            pretty_name = str(localization[3]) # Localization name
             self.localization_map[pretty_name] = str(localization[0]) # Stores a Localization ID (content) related to pretty_name (key)
 
     def update_event_map(self, full_events):
@@ -107,7 +102,7 @@ class DataSource:
     def get_mock_time(self):
         with open(self.settings.loaded['mock_time_localization'], "r") as stream:
             try:
-                data = yaml.load(stream, Loader=yaml.FullLoader)
+                data = json.load(stream)
                 # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
                 if data == None:
                     print("ERROR: actual date == None")
@@ -116,8 +111,8 @@ class DataSource:
                     self.settings.add_runtime('actual_time', data['time'])
                 # return data['time'] # Already a datetime
 
-            except yaml.YAMLError as exc:
-                # print(exc)
+            except json.JSONDecodeError as exc:
+                print(exc)
                 return None
 
     def get_time(self):
@@ -155,7 +150,7 @@ class DataSource:
         # print(f"Event summary == {event_summary}")
 
         cursor = self.connection.cursor()
-        max_results = 20
+        max_results = self.settings.loaded['max_results']
 
         if localization != None and event_summary != None:
             cursor.execute("""

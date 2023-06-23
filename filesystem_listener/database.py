@@ -5,8 +5,6 @@ import helpers
 import queue
 import time
 
-import threading
-
 
 def connect():
     print("Connecting")
@@ -202,6 +200,8 @@ def get_localizations(cursor):
 
 def store_localization(cursor, localization):
     cursor.execute("INSERT INTO localizations (latitude, longitude) VALUES (?, ?)", (localization['latitude'], localization['longitude']))
+    cursor.execute("UPDATE localizations SET name = idlocalizations WHERE name IS NULL AND latitude = ? AND longitude = ?", 
+                   (localization['latitude'], localization['longitude']))
 
 
 def insert_relationship(relationship, cursor):

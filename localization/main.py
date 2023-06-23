@@ -2,14 +2,14 @@
 import config_file_handler
 import random
 import math
-import yaml
+import json
 import settings
 
 
 def _main():
     loaded_settings = config_file_handler.parseConfigFile()
     point = generatePoint()
-    print(yaml.dump(point))
+    print(json.dumps(point))
 
 
 def generatePoint():

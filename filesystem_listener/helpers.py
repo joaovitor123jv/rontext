@@ -1,14 +1,9 @@
 from io import StringIO
-import yaml
+import json
 import settings
 import database
 import datetime
 import time
-
-
-def parse_yaml_string(string):
-    fd = StringIO(string) # Cria um 'arquivo' em memória
-    return yaml.load(fd, Loader=yaml.Loader) # Faz o parse do yaml
 
 
 def point_inside_circle(point, circle):
@@ -40,7 +35,7 @@ def get_actual_localization(cursor):
 def get_mock_time():
     with open(settings.loaded['mock_time_localization'], "r") as stream:
         try:
-            data = yaml.load(stream, Loader=yaml.FullLoader)
+            data = json.load(stream)
             # return datetime.datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
             if data == None:
                 print("ERRO!!!!: DATA ATUAL == NONE")
@@ -49,7 +44,7 @@ def get_mock_time():
                 settings.add_runtime('actual_time', data['time'])
             # return data['time'] # Já é datetime
 
-        except yaml.YAMLError as exc:
+        except json.JSONDecodeError as exc:
             print(exc)
             return None
 

@@ -38,7 +38,8 @@ def init():
         'use_agenda': True,
         'database': os.environ['HOME'] + "/.ctxt_search-database.db",
         'mountpoint': os.environ['HOME'] + "/Rontext/",
-        'event_dates_in_utc': False
+        'event_dates_in_utc': False,
+        'max_results': 20
     }
 
 

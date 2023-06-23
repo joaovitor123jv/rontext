@@ -3,7 +3,7 @@ import threading
 import subprocess
 import settings
 import database
-import helpers
+import json
 
 
 def point_inside_circle(point, circle):
@@ -36,16 +36,13 @@ def listener():
     cursor = connection.cursor()
     while True:
         return_data = subprocess.run([settings.loaded['localization_bin']], stdout=subprocess.PIPE)
-        parsed_return = helpers.parse_yaml_string(return_data.stdout.decode('utf8'))
+        parsed_return = json.loads(return_data.stdout.decode('utf8'))
+        print(f"Localization plugin {parsed_return = }")
 
         settings.add_runtime('localization', parsed_return)
 
-        if already_in_database(cursor, settings.runtime['localization']):
-            # print("Localization already in database, skipping")
-            pass
-
-        else:
-            # print("Localization is not in database, inserting")
+        if not already_in_database(cursor, settings.runtime['localization']):
+            print("Localization is not in database, inserting")
             with connection:
                 database.store_localization(cursor, settings.runtime['localization'])
 
